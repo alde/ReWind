@@ -41,19 +41,19 @@ function ReWind:GetDefaults()
 end
 
 local SOUND_LIST = {
-    { key = "wood_break",     name = "Wood Break (Default Break)",  id = 173248 },
+    { key = "wood_break",     name = "Wood Break (Default Break)",    id = 173248 },
     { key = "talent_ready",   name = "Talent Ready (Default Zenith)", id = 73280 },
-    { key = "raid_warning",   name = "Raid Warning",                id = 8959 },
-    { key = "ready_check",    name = "Ready Check",                 id = 8960 },
-    { key = "alarm1",         name = "Alarm Clock 1",               id = 12867 },
-    { key = "alarm2",         name = "Alarm Clock 2",               id = 12889 },
-    { key = "alarm3",         name = "Alarm Clock 3",               id = 12890 },
-    { key = "pvp_flag",       name = "PvP Flag Taken",              id = 8174 },
-    { key = "levelup",        name = "Level Up",                    id = 888 },
-    { key = "map_ping",       name = "Map Ping",                    id = 3175 },
-    { key = "loot_coin",      name = "Loot Coin",                   id = 120 },
-    { key = "quest_complete", name = "Quest Complete",               id = 878 },
-    { key = "none",           name = "None",                        id = nil },
+    { key = "raid_warning",   name = "Raid Warning",                  id = 8959 },
+    { key = "ready_check",    name = "Ready Check",                   id = 8960 },
+    { key = "alarm1",         name = "Alarm Clock 1",                 id = 12867 },
+    { key = "alarm2",         name = "Alarm Clock 2",                 id = 12889 },
+    { key = "alarm3",         name = "Alarm Clock 3",                 id = 12890 },
+    { key = "pvp_flag",       name = "PvP Flag Taken",                id = 8174 },
+    { key = "levelup",        name = "Level Up",                      id = 888 },
+    { key = "map_ping",       name = "Map Ping",                      id = 3175 },
+    { key = "loot_coin",      name = "Loot Coin",                     id = 120 },
+    { key = "quest_complete", name = "Quest Complete",                id = 878 },
+    { key = "none",           name = "None",                          id = nil },
 }
 
 local SOUND_BY_KEY = {}
@@ -97,7 +97,8 @@ function ReWind:ApplyAppearance()
     local borderPath = self:GetBorderTexture()
     local backdrop = {
         bgFile = "Interface\\Tooltips\\UI-Tooltip-Background",
-        tile = true, tileSize = 16,
+        tile = true,
+        tileSize = 16,
         insets = { left = 2, right = 2, top = 2, bottom = 2 },
     }
     if borderPath then
@@ -192,7 +193,9 @@ local function GetOptions()
                         desc = "How many recent abilities to display.",
                         order = 11,
 
-                        min = 2, max = 12, step = 1,
+                        min = 2,
+                        max = 12,
+                        step = 1,
                         get = function() return ReWind.db.profile.historyCount end,
                         set = function(_, val)
                             ReWind.db.profile.historyCount = val
@@ -205,7 +208,9 @@ local function GetOptions()
                         desc = "Base size of the most recent ability icon (px).",
                         order = 12,
 
-                        min = 20, max = 64, step = 2,
+                        min = 20,
+                        max = 64,
+                        step = 2,
                         get = function() return ReWind.db.profile.iconSize end,
                         set = function(_, val)
                             ReWind.db.profile.iconSize = val
@@ -223,7 +228,9 @@ local function GetOptions()
                         desc = "Opacity of the most recent (newest) icon.",
                         order = 21,
 
-                        min = 0.2, max = 1.0, step = 0.05,
+                        min = 0.2,
+                        max = 1.0,
+                        step = 0.05,
                         isPercent = true,
                         get = function() return ReWind.db.profile.iconAlpha end,
                         set = function(_, val)
@@ -237,7 +244,9 @@ local function GetOptions()
                         desc = "How much each older icon fades compared to the one before it (0 = no fade).",
                         order = 22,
 
-                        min = 0, max = 0.3, step = 0.02,
+                        min = 0,
+                        max = 0.3,
+                        step = 0.02,
                         isPercent = true,
                         get = function() return ReWind.db.profile.opacityStep end,
                         set = function(_, val)
@@ -251,7 +260,9 @@ local function GetOptions()
                         desc = "Oldest icons won't fade below this opacity.",
                         order = 23,
 
-                        min = 0.1, max = 1.0, step = 0.05,
+                        min = 0.1,
+                        max = 1.0,
+                        step = 0.05,
                         isPercent = true,
                         get = function() return ReWind.db.profile.minOpacity end,
                         set = function(_, val)
@@ -270,7 +281,9 @@ local function GetOptions()
                         desc = "Transparency of the panel background.",
                         order = 31,
 
-                        min = 0, max = 1.0, step = 0.05,
+                        min = 0,
+                        max = 1.0,
+                        step = 0.05,
                         isPercent = true,
                         get = function() return ReWind.db.profile.bgAlpha end,
                         set = function(_, val)
@@ -378,7 +391,9 @@ local function GetOptions()
                         desc = "Size of the Zenith ready icon (px).",
                         order = 14,
 
-                        min = 24, max = 80, step = 2,
+                        min = 24,
+                        max = 80,
+                        step = 2,
                         get = function() return ReWind.db.profile.zenithIconSize end,
                         set = function(_, val)
                             ReWind.db.profile.zenithIconSize = val
@@ -391,7 +406,9 @@ local function GetOptions()
                         name = "Icon Opacity",
                         desc = "Opacity of the Zenith ready icon.",
                         order = 15,
-                        min = 0.2, max = 1.0, step = 0.05,
+                        min = 0.2,
+                        max = 1.0,
+                        step = 0.05,
                         isPercent = true,
                         get = function() return ReWind.db.profile.zenithIconAlpha end,
                         set = function(_, val)
@@ -451,7 +468,9 @@ local function GetOptions()
                         name = "Intensity",
                         desc = "Peak brightness of the glow pulse.",
                         order = 24,
-                        min = 0.2, max = 1.0, step = 0.05,
+                        min = 0.2,
+                        max = 1.0,
+                        step = 0.05,
                         isPercent = true,
                         get = function() return ReWind.db.profile.zenithGlowIntensity end,
                         set = function(_, val)

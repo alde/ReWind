@@ -28,7 +28,7 @@ local function NewCombatStats()
         totalCasts = 0,
         breaks = 0,
         breakLog = {},
-        casts = {},       -- full cast log for timeline: { spellId, time, broke }
+        casts = {}, -- full cast log for timeline: { spellId, time, broke }
         startTime = GetTime(),
     }
 end
@@ -113,32 +113,47 @@ end
 function Core:SPELL_UPDATE_COOLDOWN()
     local db = ReWind.db.profile
     if db.zenithTrackZenith then
-        self:CheckZenithReady(ZENITH_ID, "zenithReady", "Zenith")
+        self:CheckZenithReady()
     end
     if db.zenithTrackStomp then
-        self:CheckZenithReady(ZENITH_STOMP_ID, "zenithStompReady", "Zenith Stomp")
+        self:CheckZenithStompReady()
     end
 end
 
-function Core:CheckZenithReady(spellId, flag, label)
-    if not IsPlayerSpell(spellId) then return end
+function Core:CheckZenithStompReady()
+    local aura = C_UnitAuras.GetPlayerAuraBySpellID(ZENITH_STOMP_ID)
+    if not aura then
+        self["zenithStompReady"] = false
+        return
+    end
+    if not self["zenithStompReady"] then
+        self["zenithStompReady"] = true
+        if ReWind.db.profile.zenithStompAlert then
+            ReWind:PlayConfigSound("zenthSound")
+        end
+        ReWind:SendMessage("REWIND_ZENITH_STOMP_READY", "ZenithStomp")
+    end
+end
 
-    local info = C_Spell.GetSpellCooldown(spellId)
+function Core:CheckZenithReady()
+    if not IsPlayerSpell(ZENITH_ID) then return end
+
+    local info = C_Spell.GetSpellCooldown(ZENITH_ID)
     if not info then return end
 
     local ready = not info.isActive
 
-    if ready and not self[flag] then
-        self[flag] = true
+    if ready and not self["zenithReady"] then
+        self["zenithReady"] = true
         if ReWind.db.profile.zenithAlert then
             ReWind:PlayConfigSound("zenithSound")
         end
-        ReWind:SendMessage("REWIND_ZENITH_READY", label)
-    elseif not ready and self[flag] then
-        self[flag] = false
-        ReWind:SendMessage("REWIND_ZENITH_COOLDOWN", label)
+        ReWind:SendMessage("REWIND_ZENITH_READY", "Zenith")
+    elseif not ready and self["zenithReady"] then
+        self["zenithReady"] = false
+        ReWind:SendMessage("REWIND_ZENITH_COOLDOWN", "Zenith")
     elseif not ready then
-        self[flag] = false
+        self["zenithReady"] = false
     end
 end
 
