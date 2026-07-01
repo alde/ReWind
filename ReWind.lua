@@ -6,17 +6,33 @@ ReWind.VERSION = "1"
 
 local WW_SPEC_ID = 269
 
+ReWind.ZENITH_ID = 1249625
+ReWind.ZENITH_STOMP_ID = 1272696
+
 ReWind.state = {
     history = {},
     lastSpellId = nil,
     masteryBroken = false,
-    combat = nil,    -- current combat encounter stats
-    keystone = nil,  -- aggregate stats across M+ pulls
+    combat = nil,
+    keystone = nil,
 }
 
 function ReWind:IsWindwalker()
     local spec = GetSpecialization()
     return spec and GetSpecializationInfo(spec) == WW_SPEC_ID
+end
+
+function ReWind:GetClassColor()
+    local _, class = UnitClass("player")
+    local color = RAID_CLASS_COLORS[class]
+    if color then return color.r, color.g, color.b end
+    return 0, 1, 0.59
+end
+
+function ReWind:GetGlowColor()
+    local c = self.db.profile.zenithGlowColor
+    if c then return c.r, c.g, c.b end
+    return self:GetClassColor()
 end
 
 function ReWind:OnInitialize()
@@ -73,6 +89,19 @@ function ReWind:DisableModules()
     end
 end
 
+function ReWind:ToggleDisplay()
+    self:GetModule("Display"):Toggle()
+end
+
+function ReWind:SetLocked(locked)
+    self.db.profile.locked = locked
+end
+
+function ReWind:ToggleLock()
+    self:SetLocked(not self.db.profile.locked)
+    self:Print("Panel " .. (self.db.profile.locked and "locked" or "unlocked") .. ".")
+end
+
 function ReWind:OnSlashCommand(input)
     local cmd = self:GetArgs(input, 1)
     cmd = cmd and cmd:lower() or ""
@@ -105,7 +134,5 @@ function ReWind:OnSlashCommand(input)
 end
 
 -- Stubs — implemented by modules
-function ReWind:ToggleDisplay() end
 function ReWind:OpenConfig() end
 function ReWind:ToggleTimeline() end
-function ReWind:ToggleLock() end

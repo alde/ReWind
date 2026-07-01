@@ -173,55 +173,44 @@ function Display:Refresh()
     self:RefreshAssisted()
 end
 
-function Display:Toggle()
+local function IsCombatVisible(combatOnlySetting)
+    return not combatOnlySetting or UnitAffectingCombat("player")
+end
+
+function Display:UpdatePanelVisibility()
     local f = self:GetFrame()
     local db = ReWind.db.profile
     if db.shown then
-        db.shown = false
-        f:SetAlpha(0)
+        f:Show()
+        f:SetAlpha(IsCombatVisible(db.panelCombatOnly) and 1 or 0)
     else
-        db.shown = true
-        if db.panelCombatOnly and not UnitAffectingCombat("player") then
-            f:Show()
-            f:SetAlpha(0)
-        else
-            f:Show()
-            f:SetAlpha(1)
-        end
-        self:Refresh()
+        f:SetAlpha(0)
     end
+end
+
+function Display:Toggle()
+    local db = ReWind.db.profile
+    db.shown = not db.shown
+    self:UpdatePanelVisibility()
+    if db.shown then self:Refresh() end
 end
 
 function Display:PLAYER_ENTERING_WORLD()
-    local db = ReWind.db.profile
-    if db.shown then
-        local f = self:GetFrame()
-        f:Show()
-        if db.panelCombatOnly then
-            f:SetAlpha(0)
-        else
-            f:SetAlpha(1)
-        end
-        self:Refresh()
-    end
+    self:UpdatePanelVisibility()
+    if ReWind.db.profile.shown then self:Refresh() end
 end
 
 function Display:PLAYER_REGEN_DISABLED()
+    self:UpdatePanelVisibility()
     local db = ReWind.db.profile
-    if db.shown and db.panelCombatOnly then
-        self:GetFrame():SetAlpha(1)
-    end
     if db.zenithCombatOnly and self.zenithIcon and self.zenithIcon:IsShown() then
         self:SetZenithIconAlpha(db.zenithIconAlpha)
     end
 end
 
 function Display:PLAYER_REGEN_ENABLED()
-    local db = ReWind.db.profile
-    if db.panelCombatOnly then
-        self:GetFrame():SetAlpha(0)
-    end
-    if db.zenithCombatOnly then
+    self:UpdatePanelVisibility()
+    if ReWind.db.profile.zenithCombatOnly then
         self:SetZenithIconAlpha(0)
     end
 end
@@ -358,16 +347,8 @@ end
 
 -- Standalone movable Zenith ready icon
 
-local ZENITH_ID = 1249625
-local ZENITH_STOMP_ID = 1272696
-
 local function GetGlowColor()
-    local c = ReWind.db.profile.zenithGlowColor
-    if c then return c.r, c.g, c.b end
-    local _, class = UnitClass("player")
-    local color = RAID_CLASS_COLORS[class]
-    if color then return color.r, color.g, color.b end
-    return 0, 1, 0.59
+    return ReWind:GetGlowColor()
 end
 
 local FLIPBOOK_STYLES = {
@@ -549,7 +530,7 @@ function Display:ShowZenithIcon(label)
     else
         f:SetAlpha(db.zenithIconAlpha)
     end
-    local spellId = (label == "Zenith") and ZENITH_ID or ZENITH_STOMP_ID
+    local spellId = (label == "Zenith") and ReWind.ZENITH_ID or ReWind.ZENITH_STOMP_ID
     local spellInfo = C_Spell.GetSpellInfo(spellId)
     local texture = spellInfo and spellInfo.iconID
     f.icon:SetTexture(texture or "Interface\\Icons\\INV_Misc_QuestionMark")
@@ -563,16 +544,3 @@ function Display:HideZenithIcon()
     self.zenithIcon:SetAlpha(0)
 end
 
--- Wire stubs
-function ReWind:ToggleDisplay()
-    self:GetModule("Display"):Toggle()
-end
-
-function ReWind:SetLocked(locked)
-    self.db.profile.locked = locked
-end
-
-function ReWind:ToggleLock()
-    self:SetLocked(not self.db.profile.locked)
-    self:Print("Panel " .. (self.db.profile.locked and "locked" or "unlocked") .. ".")
-end

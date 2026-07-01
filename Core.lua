@@ -1,9 +1,6 @@
 local ReWind = _G.ReWind
 local Core = ReWind:NewModule("Core", "AceEvent-3.0")
 
--- Abilities that trigger/benefit from Combo Strikes mastery.
--- Matches the 14 "Combo Strikes: X" spells on Wowhead minus
--- Storm, Earth, and Fire (removed in Midnight).
 local COMBO_STRIKES_SPELLS = {
     [100780]  = true, -- Tiger Palm
     [100784]  = true, -- Blackout Kick
@@ -20,19 +17,36 @@ local COMBO_STRIKES_SPELLS = {
     [1272696] = true, -- Zenith Stomp
 }
 
-local ZENITH_ID = 1249625
-local ZENITH_STOMP_ID = 1272696
-
 local function NewCombatStats()
     return {
         totalCasts = 0,
         breaks = 0,
         breakLog = {},
-        casts = {}, -- full cast log for timeline: { spellId, time, broke }
+        casts = {},
         startTime = GetTime(),
     }
 end
 
+local function RecordToStats(stats, spellId, now, broke)
+    stats.totalCasts = stats.totalCasts + 1
+    table.insert(stats.casts, { spellId = spellId, time = now, broke = broke })
+    if broke then
+        stats.breaks = stats.breaks + 1
+        table.insert(stats.breakLog, { spellId = spellId, time = now })
+    end
+end
+
+function Core:OnEnable()
+    self:RegisterEvent("UNIT_SPELLCAST_SUCCEEDED")
+    self:RegisterEvent("PLAYER_REGEN_DISABLED")
+    self:RegisterEvent("PLAYER_REGEN_ENABLED")
+    self:RegisterEvent("CHALLENGE_MODE_START")
+    self:RegisterEvent("CHALLENGE_MODE_COMPLETED")
+    self:RegisterEvent("CHALLENGE_MODE_RESET")
+    self:RegisterEvent("PLAYER_ENTERING_WORLD")
+    self:RegisterEvent("SPELL_UPDATE_COOLDOWN")
+    self:RegisterEvent("UNIT_AURA")
+end
 
 function Core:OnDisable()
     self:UnregisterAllEvents()
@@ -40,12 +54,11 @@ function Core:OnDisable()
     self.zenithStompReady = nil
 end
 
--- Combo Strikes tracking via unit event (12.0-safe)
+-- Combo Strikes tracking
 
 function Core:UNIT_SPELLCAST_SUCCEEDED(_, unit, _, spellId)
     if unit ~= "player" then return end
     if not COMBO_STRIKES_SPELLS[spellId] then return end
-
     self:RecordAbility(spellId)
 end
 
@@ -73,46 +86,16 @@ function Core:RecordAbility(spellId)
     end
 
     local now = GetTime()
-    local castEntry = { spellId = spellId, time = now, broke = broke }
-
-    if state.combat then
-        state.combat.totalCasts = state.combat.totalCasts + 1
-        table.insert(state.combat.casts, castEntry)
-        if broke then
-            state.combat.breaks = state.combat.breaks + 1
-            table.insert(state.combat.breakLog, { spellId = spellId, time = now })
-        end
-    end
-
-    if state.keystone then
-        state.keystone.totalCasts = state.keystone.totalCasts + 1
-        table.insert(state.keystone.casts, castEntry)
-        if broke then
-            state.keystone.breaks = state.keystone.breaks + 1
-            table.insert(state.keystone.breakLog, { spellId = spellId, time = now })
-        end
-    end
+    if state.combat then RecordToStats(state.combat, spellId, now, broke) end
+    if state.keystone then RecordToStats(state.keystone, spellId, now, broke) end
 
     ReWind:SendMessage("REWIND_HISTORY_UPDATED")
 end
 
--- Zenith / Zenith Stomp cooldown tracking
-
-function Core:OnEnable()
-    self:RegisterEvent("UNIT_SPELLCAST_SUCCEEDED")
-    self:RegisterEvent("PLAYER_REGEN_DISABLED")
-    self:RegisterEvent("PLAYER_REGEN_ENABLED")
-    self:RegisterEvent("CHALLENGE_MODE_START")
-    self:RegisterEvent("CHALLENGE_MODE_COMPLETED")
-    self:RegisterEvent("CHALLENGE_MODE_RESET")
-    self:RegisterEvent("PLAYER_ENTERING_WORLD")
-    self:RegisterEvent("SPELL_UPDATE_COOLDOWN")
-    self:RegisterEvent("UNIT_AURA")
-end
+-- Zenith / Zenith Stomp tracking
 
 function Core:SPELL_UPDATE_COOLDOWN()
-    local db = ReWind.db.profile
-    if db.zenithTrackZenith then
+    if ReWind.db.profile.zenithTrackZenith then
         self:CheckZenithReady()
     end
 end
@@ -125,9 +108,9 @@ function Core:UNIT_AURA(_, unit)
 end
 
 function Core:CheckZenithReady()
-    if not IsPlayerSpell(ZENITH_ID) then return end
+    if not IsPlayerSpell(ReWind.ZENITH_ID) then return end
 
-    local info = C_Spell.GetSpellCooldown(ZENITH_ID)
+    local info = C_Spell.GetSpellCooldown(ReWind.ZENITH_ID)
     if not info then return end
 
     local ready = not info.isActive
@@ -147,9 +130,9 @@ function Core:CheckZenithReady()
 end
 
 function Core:CheckZenithStompReady()
-    if not IsPlayerSpell(ZENITH_STOMP_ID) then return end
+    if not IsPlayerSpell(ReWind.ZENITH_STOMP_ID) then return end
 
-    local aura = C_UnitAuras.GetPlayerAuraBySpellID(ZENITH_STOMP_ID)
+    local aura = C_UnitAuras.GetPlayerAuraBySpellID(ReWind.ZENITH_STOMP_ID)
     local ready = aura ~= nil
 
     if ready and not self.zenithStompReady then

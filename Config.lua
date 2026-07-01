@@ -65,27 +65,16 @@ end
 
 function ReWind:PlayConfigSound(settingKey)
     local key = self.db.profile[settingKey]
+    local id = tonumber(key)
+    if id then
+        PlaySound(id, "Master")
+        return
+    end
     local entry = SOUND_BY_KEY[key]
     if entry and entry.id then
         PlaySound(entry.id, "Master")
     end
 end
-
-local function GetClassColor()
-    local _, class = UnitClass("player")
-    local color = RAID_CLASS_COLORS[class]
-    if color then
-        return color.r, color.g, color.b
-    end
-    return 0, 1, 0.59
-end
-
-local function GetZenithGlowColor()
-    local c = ReWind.db.profile.zenithGlowColor
-    if c then return c.r, c.g, c.b end
-    return GetClassColor()
-end
-
 
 function ReWind:GetBorderTexture()
     local name = self.db.profile.borderTexture
@@ -137,18 +126,8 @@ local function GetOptions()
                         set = function(_, val)
                             ReWind.db.profile.shown = val
                             local display = ReWind:GetModule("Display")
-                            local f = display:GetFrame()
-                            if val then
-                                f:Show()
-                                if ReWind.db.profile.panelCombatOnly and not UnitAffectingCombat("player") then
-                                    f:SetAlpha(0)
-                                else
-                                    f:SetAlpha(1)
-                                end
-                                display:Refresh()
-                            else
-                                f:SetAlpha(0)
-                            end
+                            display:UpdatePanelVisibility()
+                            if val then display:Refresh() end
                         end,
                     },
                     panelCombatOnly = {
@@ -160,13 +139,7 @@ local function GetOptions()
                         get = function() return ReWind.db.profile.panelCombatOnly end,
                         set = function(_, val)
                             ReWind.db.profile.panelCombatOnly = val
-                            local display = ReWind:GetModule("Display")
-                            local f = display:GetFrame()
-                            if val and not UnitAffectingCombat("player") then
-                                f:SetAlpha(0)
-                            elseif not val and ReWind.db.profile.shown then
-                                f:SetAlpha(1)
-                            end
+                            ReWind:GetModule("Display"):UpdatePanelVisibility()
                         end,
                     },
                     assistedCombat = {
@@ -346,11 +319,27 @@ local function GetOptions()
                         get = function() return ReWind.db.profile.zenithSound end,
                         set = function(_, val) ReWind.db.profile.zenithSound = val end,
                     },
+                    zenithSoundCustom = {
+                        type = "input",
+                        name = "Custom SoundKit ID",
+                        desc = "Enter a WoW soundKitID to use instead of the dropdown.",
+                        order = 5,
+                        get = function()
+                            local val = ReWind.db.profile.zenithSound
+                            return tonumber(val) and val or ""
+                        end,
+                        set = function(_, val)
+                            local id = tonumber(val)
+                            if id then
+                                ReWind.db.profile.zenithSound = tostring(id)
+                            end
+                        end,
+                    },
                     zenithSoundTest = {
                         type = "execute",
                         name = "Test",
                         desc = "Preview the selected zenith sound.",
-                        order = 5,
+                        order = 6,
                         func = function() ReWind:PlayConfigSound("zenithSound") end,
                     },
                     iconHeader = {
@@ -445,7 +434,7 @@ local function GetOptions()
                         name = "Color",
                         desc = "Color of the glow effect. Defaults to class color.",
                         order = 22,
-                        get = function() return GetZenithGlowColor() end,
+                        get = function() return ReWind:GetGlowColor() end,
                         set = function(_, r, g, b)
                             ReWind.db.profile.zenithGlowColor = { r = r, g = g, b = b }
                             local display = ReWind:GetModule("Display", true)
@@ -519,11 +508,27 @@ local function GetOptions()
                         get = function() return ReWind.db.profile.breakSound end,
                         set = function(_, val) ReWind.db.profile.breakSound = val end,
                     },
+                    breakSoundCustom = {
+                        type = "input",
+                        name = "Custom SoundKit ID",
+                        desc = "Enter a WoW soundKitID to use instead of the dropdown.",
+                        order = 13,
+                        get = function()
+                            local val = ReWind.db.profile.breakSound
+                            return tonumber(val) and val or ""
+                        end,
+                        set = function(_, val)
+                            local id = tonumber(val)
+                            if id then
+                                ReWind.db.profile.breakSound = tostring(id)
+                            end
+                        end,
+                    },
                     breakSoundTest = {
                         type = "execute",
                         name = "Test",
                         desc = "Preview the selected break sound.",
-                        order = 13,
+                        order = 14,
                         func = function() ReWind:PlayConfigSound("breakSound") end,
                     },
                     behaviourHeader = {
