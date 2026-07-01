@@ -277,7 +277,6 @@ function Display:GetZenithFrame()
 
     local f = self:GetFrame()
     local zf = CreateFrame("Frame", nil, f)
-    zf:SetSize(f:GetWidth(), f:GetHeight())
     zf:SetAllPoints(f)
     zf:SetFrameLevel(f:GetFrameLevel() + 10)
 
