@@ -14,7 +14,9 @@ function ReWind:GetDefaults()
             minOpacity = 0.3,
             soundEnabled = true,
             breakSound = "raid_warning",
+            breakSoundCustomId = "",
             zenithSound = "talent_ready",
+            zenithSoundCustomId = "",
             combatReport = true,
             zenithAlert = true,
             assistedCombat = false,
@@ -54,6 +56,7 @@ local SOUND_LIST = {
     { key = "loot_coin",      name = "Loot Coin",                     id = 120 },
     { key = "quest_complete", name = "Quest Complete",                id = 878 },
     { key = "none",           name = "None",                          id = nil },
+    { key = "custom",         name = "Custom SoundKit ID",             id = nil },
 }
 
 local SOUND_BY_KEY = {}
@@ -65,9 +68,9 @@ end
 
 function ReWind:PlayConfigSound(settingKey)
     local key = self.db.profile[settingKey]
-    local id = tonumber(key)
-    if id then
-        PlaySound(id, "Master")
+    if key == "custom" then
+        local id = tonumber(self.db.profile[settingKey .. "CustomId"])
+        if id then PlaySound(id, "Master") end
         return
     end
     local entry = SOUND_BY_KEY[key]
@@ -321,19 +324,12 @@ local function GetOptions()
                     },
                     zenithSoundCustom = {
                         type = "input",
-                        name = "Custom SoundKit ID",
-                        desc = "Enter a WoW soundKitID to use instead of the dropdown.",
+                        name = "SoundKit ID",
+                        desc = "Enter a WoW soundKitID number.",
                         order = 5,
-                        get = function()
-                            local val = ReWind.db.profile.zenithSound
-                            return tonumber(val) and val or ""
-                        end,
-                        set = function(_, val)
-                            local id = tonumber(val)
-                            if id then
-                                ReWind.db.profile.zenithSound = tostring(id)
-                            end
-                        end,
+                        hidden = function() return ReWind.db.profile.zenithSound ~= "custom" end,
+                        get = function() return ReWind.db.profile.zenithSoundCustomId end,
+                        set = function(_, val) ReWind.db.profile.zenithSoundCustomId = val end,
                     },
                     zenithSoundTest = {
                         type = "execute",
@@ -510,19 +506,12 @@ local function GetOptions()
                     },
                     breakSoundCustom = {
                         type = "input",
-                        name = "Custom SoundKit ID",
-                        desc = "Enter a WoW soundKitID to use instead of the dropdown.",
+                        name = "SoundKit ID",
+                        desc = "Enter a WoW soundKitID number.",
                         order = 13,
-                        get = function()
-                            local val = ReWind.db.profile.breakSound
-                            return tonumber(val) and val or ""
-                        end,
-                        set = function(_, val)
-                            local id = tonumber(val)
-                            if id then
-                                ReWind.db.profile.breakSound = tostring(id)
-                            end
-                        end,
+                        hidden = function() return ReWind.db.profile.breakSound ~= "custom" end,
+                        get = function() return ReWind.db.profile.breakSoundCustomId end,
+                        set = function(_, val) ReWind.db.profile.breakSoundCustomId = val end,
                     },
                     breakSoundTest = {
                         type = "execute",
