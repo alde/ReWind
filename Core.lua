@@ -116,8 +116,13 @@ end
 function Core:SPELL_UPDATE_COOLDOWN()
     if not ReWind.db.profile.zenithAlert then return end
 
-    self:CheckZenithReady(ZENITH_ID, "zenithReady", "Zenith")
-    self:CheckZenithReady(ZENITH_STOMP_ID, "zenithStompReady", "Zenith Stomp")
+    local db = ReWind.db.profile
+    if db.zenithTrackZenith then
+        self:CheckZenithReady(ZENITH_ID, "zenithReady", "Zenith")
+    end
+    if db.zenithTrackStomp then
+        self:CheckZenithReady(ZENITH_STOMP_ID, "zenithStompReady", "Zenith Stomp")
+    end
 end
 
 function Core:CheckZenithReady(spellId, flag, label)

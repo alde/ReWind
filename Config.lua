@@ -22,6 +22,8 @@ function ReWind:GetDefaults()
             clearOnCombatEnd = false,
             panelCombatOnly = false,
             zenithCombatOnly = false,
+            zenithTrackZenith = true,
+            zenithTrackStomp = false,
             zenithIconEnabled = true,
             zenithIconSize = 48,
             zenithIconAlpha = 1.0,
@@ -288,11 +290,27 @@ local function GetOptions()
                 order = 2,
                 inline = true,
                 args = {
+                    zenithTrackZenith = {
+                        type = "toggle",
+                        name = "Track Zenith",
+                        desc = "Alert when Zenith comes off cooldown.",
+                        order = 1,
+                        get = function() return ReWind.db.profile.zenithTrackZenith end,
+                        set = function(_, val) ReWind.db.profile.zenithTrackZenith = val end,
+                    },
+                    zenithTrackStomp = {
+                        type = "toggle",
+                        name = "Track Zenith Stomp",
+                        desc = "Alert when Zenith Stomp comes off cooldown.",
+                        order = 2,
+                        get = function() return ReWind.db.profile.zenithTrackStomp end,
+                        set = function(_, val) ReWind.db.profile.zenithTrackStomp = val end,
+                    },
                     zenithAlert = {
                         type = "toggle",
                         name = "Ready Sound & Flash",
-                        desc = "Play a sound and flash when Zenith or Zenith Stomp comes off cooldown.",
-                        order = 1,
+                        desc = "Play a sound and flash when a tracked spell comes off cooldown.",
+                        order = 3,
 
                         get = function() return ReWind.db.profile.zenithAlert end,
                         set = function(_, val) ReWind.db.profile.zenithAlert = val end,
@@ -300,8 +318,8 @@ local function GetOptions()
                     zenithSound = {
                         type = "select",
                         name = "Sound",
-                        desc = "Sound to play when Zenith comes off cooldown.",
-                        order = 2,
+                        desc = "Sound to play when a tracked spell comes off cooldown.",
+                        order = 4,
                         values = GetSoundValues,
                         get = function() return ReWind.db.profile.zenithSound end,
                         set = function(_, val) ReWind.db.profile.zenithSound = val end,
@@ -310,7 +328,7 @@ local function GetOptions()
                         type = "execute",
                         name = "Test",
                         desc = "Preview the selected zenith sound.",
-                        order = 3,
+                        order = 5,
                         func = function() ReWind:PlayConfigSound("zenithSound", DEFAULT_ZENITH_SOUNDKIT) end,
                     },
                     iconHeader = {
@@ -321,7 +339,7 @@ local function GetOptions()
                     zenithIconEnabled = {
                         type = "toggle",
                         name = "Show Icon",
-                        desc = "Show a standalone spell icon while Zenith or Zenith Stomp is off cooldown. Drag to reposition.",
+                        desc = "Show a standalone spell icon while a tracked spell is off cooldown. Drag to reposition.",
                         order = 12,
 
                         get = function() return ReWind.db.profile.zenithIconEnabled end,
