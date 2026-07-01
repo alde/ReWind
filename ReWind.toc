@@ -1,0 +1,26 @@
+## Interface: 120007
+## Title: ReWind
+## Version: 1
+## Notes: Windwalker Monk Combo Strikes tracker — shows recent ability history and warns on mastery breaks
+## Author: Rickard Dybeck
+## IconTexture: Interface\Icons\ClassIcon_Monk_Windwalker
+## SavedVariablesPerCharacter: ReWindDB
+## Category: Combat
+## Dependencies
+## OptionalDeps: Ace3
+
+## Libs
+Libs\LibStub\LibStub.lua
+Libs\CallbackHandler-1.0\CallbackHandler-1.0.lua
+Libs\AceAddon-3.0\AceAddon-3.0.lua
+Libs\AceDB-3.0\AceDB-3.0.lua
+Libs\AceEvent-3.0\AceEvent-3.0.lua
+Libs\AceGUI-3.0\AceGUI-3.0.xml
+Libs\AceConfig-3.0\AceConfig-3.0.xml
+Libs\AceConsole-3.0\AceConsole-3.0.lua
+
+## Core
+ReWind.lua
+Core.lua
+Display.lua
+Config.lua
