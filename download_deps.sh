@@ -3,21 +3,47 @@ set -euo pipefail
 
 mkdir -p Libs
 
-deps=(
-  "LibStub|https://repos.wowace.com/wow/libstub/trunk"
-  "CallbackHandler-1.0|https://repos.wowace.com/wow/callbackhandler/trunk/CallbackHandler-1.0"
-  "AceAddon-3.0|https://repos.wowace.com/wow/ace3/trunk/AceAddon-3.0"
-  "AceEvent-3.0|https://repos.wowace.com/wow/ace3/trunk/AceEvent-3.0"
-  "AceDB-3.0|https://repos.wowace.com/wow/ace3/trunk/AceDB-3.0"
-  "AceConsole-3.0|https://repos.wowace.com/wow/ace3/trunk/AceConsole-3.0"
-  "AceGUI-3.0|https://repos.wowace.com/wow/ace3/trunk/AceGUI-3.0"
-  "AceConfig-3.0|https://repos.wowace.com/wow/ace3/trunk/AceConfig-3.0"
-)
+current_path=""
+current_url=""
+in_externals=false
 
-for entry in "${deps[@]}"; do
-  name="${entry%%|*}"
-  url="${entry##*|}"
-  echo "Checking out Libs/${name}..."
-  svn checkout "$url" "Libs/${name}"
-  echo "Done."
-done
+checkout() {
+  if [[ -n "$current_path" && -n "$current_url" ]]; then
+    echo "Checking out ${current_path}..."
+    svn checkout "$current_url" "$current_path"
+    echo "Done."
+  fi
+}
+
+while IFS= read -r line || [[ -n "$line" ]]; do
+  # strip comments and trailing whitespace
+  line="${line%%#*}"
+
+  if [[ "$line" =~ ^externals: ]]; then
+    in_externals=true
+    continue
+  fi
+
+  if ! $in_externals; then
+    continue
+  fi
+
+  # non-indented line means we've left the externals block
+  if [[ -n "$line" && ! "$line" =~ ^[[:space:]] ]]; then
+    break
+  fi
+
+  # path line: "  Libs/Foo:"
+  if [[ "$line" =~ ^[[:space:]]{2}[^[:space:]] && "$line" =~ : ]]; then
+    checkout
+    current_path="$(echo "$line" | sed 's/^[[:space:]]*//' | sed 's/:$//')"
+    current_url=""
+  fi
+
+  # url line: "    url: https://..."
+  if [[ "$line" =~ ^[[:space:]]+url: ]]; then
+    current_url="$(echo "$line" | sed 's/^[[:space:]]*url:[[:space:]]*//')"
+  fi
+done < .pkgmeta
+
+checkout
