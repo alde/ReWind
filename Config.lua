@@ -47,6 +47,9 @@ function ReWind:PlayConfigSound(settingKey, defaultSoundKit)
     end
 end
 
+local DEFAULT_BREAK_SOUNDKIT = 173248
+local DEFAULT_ZENITH_SOUNDKIT = 73280
+
 local function GetSoundValues()
     local values = { Default = "Default" }
     for k, v in pairs(LSM:HashTable("sound")) do
@@ -285,16 +288,23 @@ local function GetOptions()
                         get = function() return ReWind.db.profile.zenithSound end,
                         set = function(_, val) ReWind.db.profile.zenithSound = val end,
                     },
+                    zenithSoundTest = {
+                        type = "execute",
+                        name = "Test",
+                        desc = "Preview the selected zenith sound.",
+                        order = 3,
+                        func = function() ReWind:PlayConfigSound("zenithSound", DEFAULT_ZENITH_SOUNDKIT) end,
+                    },
                     iconHeader = {
                         type = "header",
                         name = "Ready Icon",
-                        order = 10,
+                        order = 11,
                     },
                     zenithIconEnabled = {
                         type = "toggle",
                         name = "Show Icon",
                         desc = "Show a standalone spell icon while Zenith or Zenith Stomp is off cooldown. Drag to reposition.",
-                        order = 11,
+                        order = 12,
 
                         get = function() return ReWind.db.profile.zenithIconEnabled end,
                         set = function(_, val) ReWind.db.profile.zenithIconEnabled = val end,
@@ -303,7 +313,7 @@ local function GetOptions()
                         type = "toggle",
                         name = "Only in Combat",
                         desc = "Only show the Zenith ready icon while in combat.",
-                        order = 12,
+                        order = 13,
 
                         get = function() return ReWind.db.profile.zenithCombatOnly end,
                         set = function(_, val)
@@ -321,7 +331,7 @@ local function GetOptions()
                         type = "range",
                         name = "Icon Size",
                         desc = "Size of the Zenith ready icon (px).",
-                        order = 13,
+                        order = 14,
 
                         min = 24, max = 80, step = 2,
                         get = function() return ReWind.db.profile.zenithIconSize end,
@@ -335,7 +345,7 @@ local function GetOptions()
                         type = "range",
                         name = "Icon Opacity",
                         desc = "Opacity of the Zenith ready icon.",
-                        order = 14,
+                        order = 15,
 
                         min = 0.2, max = 1.0, step = 0.05,
                         isPercent = true,
@@ -385,6 +395,13 @@ local function GetOptions()
                         values = GetSoundValues,
                         get = function() return ReWind.db.profile.breakSound end,
                         set = function(_, val) ReWind.db.profile.breakSound = val end,
+                    },
+                    breakSoundTest = {
+                        type = "execute",
+                        name = "Test",
+                        desc = "Preview the selected break sound.",
+                        order = 13,
+                        func = function() ReWind:PlayConfigSound("breakSound", DEFAULT_BREAK_SOUNDKIT) end,
                     },
                     behaviourHeader = {
                         type = "header",
