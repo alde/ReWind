@@ -99,7 +99,7 @@ local function GetOptions()
                         name = "Show Panel",
                         desc = "Show the ability history strip.",
                         order = 1,
-                        width = "half",
+
                         get = function() return ReWind.db.profile.shown end,
                         set = function(_, val)
                             ReWind.db.profile.shown = val
@@ -123,7 +123,7 @@ local function GetOptions()
                         name = "Only in Combat",
                         desc = "Only show the ability panel while in combat.",
                         order = 2,
-                        width = "half",
+
                         get = function() return ReWind.db.profile.panelCombatOnly end,
                         set = function(_, val)
                             ReWind.db.profile.panelCombatOnly = val
@@ -141,7 +141,7 @@ local function GetOptions()
                         name = "Next Spell (Blizzard)",
                         desc = "Show Blizzard's recommended next ability. Take with a grain of salt.",
                         order = 3,
-                        width = "half",
+
                         hidden = function() return C_AssistedCombat == nil end,
                         get = function() return ReWind.db.profile.assistedCombat end,
                         set = function(_, val)
@@ -159,7 +159,7 @@ local function GetOptions()
                         name = "History Length",
                         desc = "How many recent abilities to display.",
                         order = 11,
-                        width = "double",
+
                         min = 2, max = 12, step = 1,
                         get = function() return ReWind.db.profile.historyCount end,
                         set = function(_, val)
@@ -172,7 +172,7 @@ local function GetOptions()
                         name = "Icon Size",
                         desc = "Base size of the most recent ability icon (px).",
                         order = 12,
-                        width = "double",
+
                         min = 20, max = 64, step = 2,
                         get = function() return ReWind.db.profile.iconSize end,
                         set = function(_, val)
@@ -190,7 +190,7 @@ local function GetOptions()
                         name = "Base Opacity",
                         desc = "Opacity of the most recent (newest) icon.",
                         order = 21,
-                        width = "double",
+
                         min = 0.2, max = 1.0, step = 0.05,
                         isPercent = true,
                         get = function() return ReWind.db.profile.iconAlpha end,
@@ -204,7 +204,7 @@ local function GetOptions()
                         name = "Fade Per Icon",
                         desc = "How much each older icon fades compared to the one before it (0 = no fade).",
                         order = 22,
-                        width = "double",
+
                         min = 0, max = 0.3, step = 0.02,
                         isPercent = true,
                         get = function() return ReWind.db.profile.opacityStep end,
@@ -218,7 +218,7 @@ local function GetOptions()
                         name = "Fade Floor",
                         desc = "Oldest icons won't fade below this opacity.",
                         order = 23,
-                        width = "double",
+
                         min = 0.1, max = 1.0, step = 0.05,
                         isPercent = true,
                         get = function() return ReWind.db.profile.minOpacity end,
@@ -237,7 +237,7 @@ local function GetOptions()
                         name = "Background Opacity",
                         desc = "Transparency of the panel background.",
                         order = 31,
-                        width = "double",
+
                         min = 0, max = 1.0, step = 0.05,
                         isPercent = true,
                         get = function() return ReWind.db.profile.bgAlpha end,
@@ -251,7 +251,7 @@ local function GetOptions()
                         dialogControl = "LSM30_Border",
                         name = "Border",
                         order = 32,
-                        width = "double",
+
                         values = LSM:HashTable("border"),
                         get = function() return ReWind.db.profile.borderTexture end,
                         set = function(_, val)
@@ -272,7 +272,7 @@ local function GetOptions()
                         name = "Ready Sound & Flash",
                         desc = "Play a sound and flash when Zenith or Zenith Stomp comes off cooldown.",
                         order = 1,
-                        width = "half",
+
                         get = function() return ReWind.db.profile.zenithAlert end,
                         set = function(_, val) ReWind.db.profile.zenithAlert = val end,
                     },
@@ -295,7 +295,7 @@ local function GetOptions()
                         name = "Show Icon",
                         desc = "Show a standalone spell icon while Zenith or Zenith Stomp is off cooldown. Drag to reposition.",
                         order = 11,
-                        width = "half",
+
                         get = function() return ReWind.db.profile.zenithIconEnabled end,
                         set = function(_, val) ReWind.db.profile.zenithIconEnabled = val end,
                     },
@@ -304,7 +304,7 @@ local function GetOptions()
                         name = "Only in Combat",
                         desc = "Only show the Zenith ready icon while in combat.",
                         order = 12,
-                        width = "half",
+
                         get = function() return ReWind.db.profile.zenithCombatOnly end,
                         set = function(_, val)
                             ReWind.db.profile.zenithCombatOnly = val
@@ -322,7 +322,7 @@ local function GetOptions()
                         name = "Icon Size",
                         desc = "Size of the Zenith ready icon (px).",
                         order = 13,
-                        width = "double",
+
                         min = 24, max = 80, step = 2,
                         get = function() return ReWind.db.profile.zenithIconSize end,
                         set = function(_, val)
@@ -336,7 +336,7 @@ local function GetOptions()
                         name = "Icon Opacity",
                         desc = "Opacity of the Zenith ready icon.",
                         order = 14,
-                        width = "double",
+
                         min = 0.2, max = 1.0, step = 0.05,
                         isPercent = true,
                         get = function() return ReWind.db.profile.zenithIconAlpha end,
@@ -359,7 +359,7 @@ local function GetOptions()
                         name = "Lock Frames",
                         desc = "Prevent all frames from being dragged.",
                         order = 1,
-                        width = "full",
+
                         get = function() return ReWind.db.profile.locked end,
                         set = function(_, val) ReWind:SetLocked(val) end,
                     },
@@ -373,7 +373,7 @@ local function GetOptions()
                         name = "Mastery Break Sound",
                         desc = "Play an alert sound when you repeat the same ability and break Combo Strikes.",
                         order = 11,
-                        width = "half",
+
                         get = function() return ReWind.db.profile.soundEnabled end,
                         set = function(_, val) ReWind.db.profile.soundEnabled = val end,
                     },
