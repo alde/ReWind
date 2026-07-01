@@ -324,13 +324,15 @@ end
 
 local ZENITH_ID = 1249625
 local ZENITH_STOMP_ID = 1272696
-local ZENITH_ICON_SIZE = 48
 
 function Display:GetZenithIcon()
     if self.zenithIcon then return self.zenithIcon end
 
+    local db = ReWind.db.profile
+    local size = db.zenithIconSize
+
     local f = CreateFrame("Frame", "ReWindZenithIcon", UIParent, "BackdropTemplate")
-    f:SetSize(ZENITH_ICON_SIZE, ZENITH_ICON_SIZE)
+    f:SetSize(size, size)
     f:SetBackdrop({
         bgFile = "Interface\\Tooltips\\UI-Tooltip-Background",
         edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
@@ -359,24 +361,27 @@ function Display:GetZenithIcon()
     icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
     f.icon = icon
 
-    local glow = f:CreateTexture(nil, "OVERLAY")
-    glow:SetPoint("TOPLEFT", -4, 4)
-    glow:SetPoint("BOTTOMRIGHT", 4, -4)
-    glow:SetTexture("Interface\\Buttons\\UI-ActionButton-Border")
-    glow:SetBlendMode("ADD")
-    glow:SetVertexColor(0.0, 0.9, 0.4)
-    f.glow = glow
+    local glow = CreateFrame("Frame", nil, f)
+    glow:SetPoint("TOPLEFT", -2, 2)
+    glow:SetPoint("BOTTOMRIGHT", 2, -2)
+    glow:SetFrameLevel(f:GetFrameLevel() + 1)
+    local glowTex = glow:CreateTexture(nil, "OVERLAY")
+    glowTex:SetAllPoints()
+    glowTex:SetTexture("Interface\\Buttons\\UI-ActionButton-Border")
+    glowTex:SetBlendMode("ADD")
+    glowTex:SetVertexColor(0.0, 0.9, 0.4)
+    f.glowFrame = glow
 
-    local ag = f:CreateAnimationGroup()
+    local ag = glow:CreateAnimationGroup()
     ag:SetLooping("BOUNCE")
     local pulse = ag:CreateAnimation("Alpha")
-    pulse:SetFromAlpha(0.6)
-    pulse:SetToAlpha(1.0)
+    pulse:SetFromAlpha(0.4)
+    pulse:SetToAlpha(0.9)
     pulse:SetDuration(0.8)
     pulse:SetSmoothing("IN_OUT")
     f.ag = ag
 
-    local pos = ReWind.db.profile.zenithIconPosition
+    local pos = db.zenithIconPosition
     if pos then
         f:SetPoint(pos.point, UIParent, pos.relPoint, pos.x, pos.y)
     else
@@ -388,10 +393,20 @@ function Display:GetZenithIcon()
     return f
 end
 
+function Display:UpdateZenithIconAppearance()
+    if not self.zenithIcon then return end
+    local db = ReWind.db.profile
+    self.zenithIcon:SetSize(db.zenithIconSize, db.zenithIconSize)
+    self.zenithIcon:SetAlpha(db.zenithIconAlpha)
+end
+
 function Display:ShowZenithIcon(label)
     if not ReWind.db.profile.zenithIconEnabled then return end
 
     local f = self:GetZenithIcon()
+    local db = ReWind.db.profile
+    f:SetSize(db.zenithIconSize, db.zenithIconSize)
+    f:SetAlpha(db.zenithIconAlpha)
     local spellId = (label == "Zenith") and ZENITH_ID or ZENITH_STOMP_ID
     local spellInfo = C_Spell.GetSpellInfo(spellId)
     local texture = spellInfo and spellInfo.iconID
