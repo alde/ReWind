@@ -33,18 +33,6 @@ local function NewCombatStats()
     }
 end
 
-function Core:OnEnable()
-    -- UNIT_SPELLCAST_SUCCEEDED is a unit event, not a combat log event,
-    -- so it survives the 12.0 CLEU restrictions in instances.
-    self:RegisterEvent("UNIT_SPELLCAST_SUCCEEDED")
-    self:RegisterEvent("PLAYER_REGEN_DISABLED")
-    self:RegisterEvent("PLAYER_REGEN_ENABLED")
-    self:RegisterEvent("CHALLENGE_MODE_START")
-    self:RegisterEvent("CHALLENGE_MODE_COMPLETED")
-    self:RegisterEvent("CHALLENGE_MODE_RESET")
-    self:RegisterEvent("PLAYER_ENTERING_WORLD")
-    self:RegisterEvent("SPELL_UPDATE_COOLDOWN")
-end
 
 function Core:OnDisable()
     self:UnregisterAllEvents()
@@ -110,28 +98,29 @@ end
 
 -- Zenith / Zenith Stomp cooldown tracking
 
+function Core:OnEnable()
+    self:RegisterEvent("UNIT_SPELLCAST_SUCCEEDED")
+    self:RegisterEvent("PLAYER_REGEN_DISABLED")
+    self:RegisterEvent("PLAYER_REGEN_ENABLED")
+    self:RegisterEvent("CHALLENGE_MODE_START")
+    self:RegisterEvent("CHALLENGE_MODE_COMPLETED")
+    self:RegisterEvent("CHALLENGE_MODE_RESET")
+    self:RegisterEvent("PLAYER_ENTERING_WORLD")
+    self:RegisterEvent("SPELL_UPDATE_COOLDOWN")
+    self:RegisterEvent("UNIT_AURA")
+end
+
 function Core:SPELL_UPDATE_COOLDOWN()
     local db = ReWind.db.profile
     if db.zenithTrackZenith then
         self:CheckZenithReady()
     end
-    if db.zenithTrackStomp then
-        self:CheckZenithStompReady()
-    end
 end
 
-function Core:CheckZenithStompReady()
-    local aura = C_UnitAuras.GetPlayerAuraBySpellID(ZENITH_STOMP_ID)
-    if not aura then
-        self["zenithStompReady"] = false
-        return
-    end
-    if not self["zenithStompReady"] then
-        self["zenithStompReady"] = true
-        if ReWind.db.profile.zenithStompAlert then
-            ReWind:PlayConfigSound("zenthSound")
-        end
-        ReWind:SendMessage("REWIND_ZENITH_STOMP_READY", "ZenithStomp")
+function Core:UNIT_AURA(_, unit)
+    if unit ~= "player" then return end
+    if ReWind.db.profile.zenithTrackStomp then
+        self:CheckZenithStompReady()
     end
 end
 
@@ -143,17 +132,35 @@ function Core:CheckZenithReady()
 
     local ready = not info.isActive
 
-    if ready and not self["zenithReady"] then
-        self["zenithReady"] = true
+    if ready and not self.zenithReady then
+        self.zenithReady = true
         if ReWind.db.profile.zenithAlert then
             ReWind:PlayConfigSound("zenithSound")
         end
         ReWind:SendMessage("REWIND_ZENITH_READY", "Zenith")
-    elseif not ready and self["zenithReady"] then
-        self["zenithReady"] = false
+    elseif not ready and self.zenithReady then
+        self.zenithReady = false
         ReWind:SendMessage("REWIND_ZENITH_COOLDOWN", "Zenith")
     elseif not ready then
-        self["zenithReady"] = false
+        self.zenithReady = false
+    end
+end
+
+function Core:CheckZenithStompReady()
+    if not IsPlayerSpell(ZENITH_STOMP_ID) then return end
+
+    local aura = C_UnitAuras.GetPlayerAuraBySpellID(ZENITH_STOMP_ID)
+    local ready = aura ~= nil
+
+    if ready and not self.zenithStompReady then
+        self.zenithStompReady = true
+        if ReWind.db.profile.zenithAlert then
+            ReWind:PlayConfigSound("zenithSound")
+        end
+        ReWind:SendMessage("REWIND_ZENITH_READY", "Zenith Stomp")
+    elseif not ready and self.zenithStompReady then
+        self.zenithStompReady = false
+        ReWind:SendMessage("REWIND_ZENITH_COOLDOWN", "Zenith Stomp")
     end
 end
 
