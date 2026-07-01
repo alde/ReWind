@@ -132,7 +132,7 @@ function Display:Refresh()
         if entry then
             local age = i - 1
             local scale = math.max(0.6, 1.0 - (age * 0.06))
-            local alpha = math.max(db.minOpacity, 1.0 - (age * db.opacityStep))
+            local alpha = db.iconAlpha * math.max(db.minOpacity, 1.0 - (age * db.opacityStep))
             local iconPixels = math.floor(baseSize * scale)
 
             container:SetSize(iconPixels, iconPixels)
@@ -199,6 +199,8 @@ function Display:PLAYER_ENTERING_WORLD()
         f:Show()
         if db.panelCombatOnly then
             f:SetAlpha(0)
+        else
+            f:SetAlpha(1)
         end
         self:Refresh()
     end

@@ -72,7 +72,7 @@ function Core:RecordAbility(spellId)
     state.masteryBroken = broke
 
     if broke and ReWind.db.profile.soundEnabled then
-        PlaySound(SOUND_BREAK, "Master")
+        ReWind:PlayConfigSound("breakSound", SOUND_BREAK)
     end
 
     state.lastSpellId = spellId
@@ -130,7 +130,7 @@ function Core:CheckZenithReady(spellId, flag, label)
 
     if ready and not self[flag] then
         self[flag] = true
-        PlaySound(SOUND_ZENITH_READY, "Master")
+        ReWind:PlayConfigSound("zenithSound", SOUND_ZENITH_READY)
         ReWind:SendMessage("REWIND_ZENITH_READY", label)
     elseif not ready and self[flag] then
         self[flag] = false

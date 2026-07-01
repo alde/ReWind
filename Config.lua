@@ -9,9 +9,12 @@ function ReWind:GetDefaults()
             locked = false,
             historyCount = 6,
             iconSize = 40,
+            iconAlpha = 1.0,
             opacityStep = 0.12,
             minOpacity = 0.3,
             soundEnabled = true,
+            breakSound = "Default",
+            zenithSound = "Default",
             combatReport = true,
             zenithAlert = true,
             assistedCombat = false,
@@ -30,6 +33,26 @@ function ReWind:GetDefaults()
             position = nil,
         },
     }
+end
+
+function ReWind:PlayConfigSound(settingKey, defaultSoundKit)
+    local name = self.db.profile[settingKey]
+    if name == "Default" then
+        PlaySound(defaultSoundKit, "Master")
+    elseif name == "None" then
+        return
+    else
+        local path = LSM:Fetch("sound", name)
+        if path then PlaySoundFile(path, "Master") end
+    end
+end
+
+local function GetSoundValues()
+    local values = { Default = "Default" }
+    for k, v in pairs(LSM:HashTable("sound")) do
+        values[k] = k
+    end
+    return values
 end
 
 function ReWind:GetBorderTexture()
@@ -135,11 +158,24 @@ local function GetOptions()
                             ReWind:SendMessage("REWIND_HISTORY_UPDATED")
                         end,
                     },
+                    iconAlpha = {
+                        type = "range",
+                        name = "Icon Opacity",
+                        desc = "Base opacity of the most recent ability icon.",
+                        order = 5,
+                        min = 0.2, max = 1.0, step = 0.05,
+                        isPercent = true,
+                        get = function() return ReWind.db.profile.iconAlpha end,
+                        set = function(_, val)
+                            ReWind.db.profile.iconAlpha = val
+                            ReWind:SendMessage("REWIND_HISTORY_UPDATED")
+                        end,
+                    },
                     opacityStep = {
                         type = "range",
                         name = "Opacity Fade",
                         desc = "How much each older icon fades (0 = no fade).",
-                        order = 5,
+                        order = 6,
                         min = 0, max = 0.3, step = 0.02,
                         isPercent = true,
                         get = function() return ReWind.db.profile.opacityStep end,
@@ -152,7 +188,7 @@ local function GetOptions()
                         type = "range",
                         name = "Min Opacity",
                         desc = "Oldest icons won't fade below this.",
-                        order = 6,
+                        order = 7,
                         min = 0.1, max = 1.0, step = 0.05,
                         isPercent = true,
                         get = function() return ReWind.db.profile.minOpacity end,
@@ -165,7 +201,7 @@ local function GetOptions()
                         type = "range",
                         name = "Background Opacity",
                         desc = "Transparency of the panel background.",
-                        order = 7,
+                        order = 8,
                         min = 0, max = 1.0, step = 0.05,
                         isPercent = true,
                         get = function() return ReWind.db.profile.bgAlpha end,
@@ -178,7 +214,7 @@ local function GetOptions()
                         type = "select",
                         dialogControl = "LSM30_Border",
                         name = "Border",
-                        order = 8,
+                        order = 9,
                         values = LSM:HashTable("border"),
                         get = function() return ReWind.db.profile.borderTexture end,
                         set = function(_, val)
@@ -190,7 +226,7 @@ local function GetOptions()
                         type = "toggle",
                         name = "Next Spell (Blizzard)",
                         desc = "Show Blizzard's recommended next ability. Take with a grain of salt.",
-                        order = 9,
+                        order = 10,
                         hidden = function() return C_AssistedCombat == nil end,
                         get = function() return ReWind.db.profile.assistedCombat end,
                         set = function(_, val)
@@ -214,11 +250,20 @@ local function GetOptions()
                         get = function() return ReWind.db.profile.zenithAlert end,
                         set = function(_, val) ReWind.db.profile.zenithAlert = val end,
                     },
+                    zenithSound = {
+                        type = "select",
+                        name = "Ready Sound",
+                        desc = "Sound to play when Zenith comes off cooldown.",
+                        order = 2,
+                        values = GetSoundValues,
+                        get = function() return ReWind.db.profile.zenithSound end,
+                        set = function(_, val) ReWind.db.profile.zenithSound = val end,
+                    },
                     zenithIconEnabled = {
                         type = "toggle",
                         name = "Ready Icon",
                         desc = "Show a standalone spell icon while Zenith or Zenith Stomp is off cooldown. Drag to reposition.",
-                        order = 2,
+                        order = 3,
                         get = function() return ReWind.db.profile.zenithIconEnabled end,
                         set = function(_, val) ReWind.db.profile.zenithIconEnabled = val end,
                     },
@@ -226,7 +271,7 @@ local function GetOptions()
                         type = "toggle",
                         name = "Only in Combat",
                         desc = "Only show the Zenith ready icon while in combat.",
-                        order = 3,
+                        order = 4,
                         get = function() return ReWind.db.profile.zenithCombatOnly end,
                         set = function(_, val)
                             ReWind.db.profile.zenithCombatOnly = val
@@ -243,7 +288,7 @@ local function GetOptions()
                         type = "range",
                         name = "Icon Size",
                         desc = "Size of the Zenith ready icon (px).",
-                        order = 4,
+                        order = 5,
                         min = 24, max = 80, step = 2,
                         get = function() return ReWind.db.profile.zenithIconSize end,
                         set = function(_, val)
@@ -256,7 +301,7 @@ local function GetOptions()
                         type = "range",
                         name = "Icon Opacity",
                         desc = "Opacity of the Zenith ready icon.",
-                        order = 5,
+                        order = 6,
                         min = 0.2, max = 1.0, step = 0.05,
                         isPercent = true,
                         get = function() return ReWind.db.profile.zenithIconAlpha end,
@@ -290,11 +335,20 @@ local function GetOptions()
                         get = function() return ReWind.db.profile.soundEnabled end,
                         set = function(_, val) ReWind.db.profile.soundEnabled = val end,
                     },
+                    breakSound = {
+                        type = "select",
+                        name = "Break Sound",
+                        desc = "Sound to play on mastery break.",
+                        order = 3,
+                        values = GetSoundValues,
+                        get = function() return ReWind.db.profile.breakSound end,
+                        set = function(_, val) ReWind.db.profile.breakSound = val end,
+                    },
                     combatReport = {
                         type = "toggle",
                         name = "Combat Report",
                         desc = "Print a mastery uptime summary to chat at the end of each fight and M+ run.",
-                        order = 3,
+                        order = 4,
                         get = function() return ReWind.db.profile.combatReport end,
                         set = function(_, val) ReWind.db.profile.combatReport = val end,
                     },
@@ -302,7 +356,7 @@ local function GetOptions()
                         type = "toggle",
                         name = "Auto-show Timeline",
                         desc = "Automatically show the ability timeline after each fight.",
-                        order = 4,
+                        order = 5,
                         get = function() return ReWind.db.profile.timelineAutoShow end,
                         set = function(_, val) ReWind.db.profile.timelineAutoShow = val end,
                     },
@@ -310,7 +364,7 @@ local function GetOptions()
                         type = "toggle",
                         name = "Clear on Combat End",
                         desc = "Wipe the ability history when you leave combat.",
-                        order = 5,
+                        order = 6,
                         get = function() return ReWind.db.profile.clearOnCombatEnd end,
                         set = function(_, val) ReWind.db.profile.clearOnCombatEnd = val end,
                     },

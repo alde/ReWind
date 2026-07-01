@@ -3,7 +3,7 @@
 ## Version: 1
 ## Notes: Windwalker Monk Combo Strikes tracker — shows recent ability history and warns on mastery breaks
 ## Author: Rickard Dybeck
-## IconTexture: Interface\Icons\ClassIcon_Monk_Windwalker
+## IconTexture: Interface\Icons\spell_monk_windwalker_spec
 ## SavedVariablesPerCharacter: ReWindDB
 ## Category: Combat
 ## Dependencies
