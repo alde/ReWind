@@ -94,6 +94,8 @@ end
 
 function ReWind:SetLocked(locked)
     self.db.profile.locked = locked
+    local display = self:GetModule("Display", true)
+    if display then display:ApplyLock() end
 end
 
 function ReWind:ToggleLock()

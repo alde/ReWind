@@ -46,6 +46,7 @@ function Display:GetFrame()
     f.icons = {}
     self.frame = f
     ReWind:ApplyAppearance()
+    self:ApplyLock()
     self:RestorePosition()
     self:LayoutFrame()
 
@@ -175,6 +176,16 @@ end
 
 local function IsCombatVisible(combatOnlySetting)
     return not combatOnlySetting or UnitAffectingCombat("player")
+end
+
+function Display:ApplyLock()
+    local locked = ReWind.db.profile.locked
+    if self.frame then
+        self.frame:EnableMouse(not locked)
+    end
+    if self.zenithIcon then
+        self.zenithIcon:EnableMouse(not locked)
+    end
 end
 
 function Display:UpdatePanelVisibility()
@@ -467,6 +478,7 @@ function Display:GetZenithIcon()
 
     f:Hide()
     self.zenithIcon = f
+    self:ApplyLock()
     return f
 end
 
