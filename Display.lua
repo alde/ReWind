@@ -361,6 +361,66 @@ end
 local ZENITH_ID = 1249625
 local ZENITH_STOMP_ID = 1272696
 
+local function GetGlowColor()
+    local c = ReWind.db.profile.zenithGlowColor
+    if c then return c.r, c.g, c.b end
+    local _, class = UnitClass("player")
+    local color = RAID_CLASS_COLORS[class]
+    if color then return color.r, color.g, color.b end
+    return 0, 1, 0.59
+end
+
+local FLIPBOOK_STYLES = {
+    proc = {
+        atlas = "UI-HUD-ActionBar-Proc-Loop-Flipbook",
+        rows = 6, columns = 5, frames = 30, duration = 1.0,
+        texPadding = 1.4,
+    },
+    ants = {
+        texture = "Interface\\SpellActivationOverlay\\IconAlertAnts",
+        rows = 5, columns = 5, frames = 22, duration = 0.3,
+        frameW = 48, frameH = 48, texPadding = 1.25,
+    },
+}
+
+local function StartFlipBookGlow(frame, size, entry, r, g, b)
+    local texSize = size * (entry.texPadding or 1)
+
+    if not frame._flipData then
+        local tex = frame:CreateTexture(nil, "OVERLAY", nil, 7)
+        tex:SetPoint("CENTER")
+        local ag = tex:CreateAnimationGroup()
+        ag:SetLooping("REPEAT")
+        local anim = ag:CreateAnimation("FlipBook")
+        frame._flipData = { tex = tex, ag = ag, anim = anim }
+    end
+
+    local d = frame._flipData
+    d.tex:SetSize(texSize, texSize)
+    if entry.atlas then
+        d.tex:SetAtlas(entry.atlas)
+    elseif entry.texture then
+        d.tex:SetTexture(entry.texture)
+    end
+    d.tex:SetDesaturated(true)
+    d.tex:SetVertexColor(r, g, b)
+    d.tex:Show()
+    d.anim:SetFlipBookRows(entry.rows or 6)
+    d.anim:SetFlipBookColumns(entry.columns or 5)
+    d.anim:SetFlipBookFrames(entry.frames or 30)
+    d.anim:SetDuration(entry.duration or 1.0)
+    d.anim:SetFlipBookFrameWidth(entry.frameW or 0)
+    d.anim:SetFlipBookFrameHeight(entry.frameH or 0)
+    if d.ag:IsPlaying() then d.ag:Stop() end
+    d.ag:Play()
+end
+
+local function StopFlipBookGlow(frame)
+    if not frame._flipData then return end
+    frame._flipData.tex:Hide()
+    frame._flipData.ag:Stop()
+end
+
 function Display:GetZenithIcon()
     if self.zenithIcon then return self.zenithIcon end
 
@@ -436,66 +496,6 @@ function Display:UpdateZenithIconAppearance()
     self.zenithIcon:SetSize(size, size)
     self.zenithIcon:SetAlpha(db.zenithIconAlpha)
     self:ApplyZenithGlow()
-end
-
-local function GetGlowColor()
-    local c = ReWind.db.profile.zenithGlowColor
-    if c then return c.r, c.g, c.b end
-    local _, class = UnitClass("player")
-    local color = RAID_CLASS_COLORS[class]
-    if color then return color.r, color.g, color.b end
-    return 0, 1, 0.59
-end
-
-local FLIPBOOK_STYLES = {
-    proc = {
-        atlas = "UI-HUD-ActionBar-Proc-Loop-Flipbook",
-        rows = 6, columns = 5, frames = 30, duration = 1.0,
-        texPadding = 1.4,
-    },
-    ants = {
-        texture = "Interface\\SpellActivationOverlay\\IconAlertAnts",
-        rows = 5, columns = 5, frames = 22, duration = 0.3,
-        frameW = 48, frameH = 48, texPadding = 1.25,
-    },
-}
-
-local function StartFlipBookGlow(frame, size, entry, r, g, b)
-    local texSize = size * (entry.texPadding or 1)
-
-    if not frame._flipData then
-        local tex = frame:CreateTexture(nil, "OVERLAY", nil, 7)
-        tex:SetPoint("CENTER")
-        local ag = tex:CreateAnimationGroup()
-        ag:SetLooping("REPEAT")
-        local anim = ag:CreateAnimation("FlipBook")
-        frame._flipData = { tex = tex, ag = ag, anim = anim }
-    end
-
-    local d = frame._flipData
-    d.tex:SetSize(texSize, texSize)
-    if entry.atlas then
-        d.tex:SetAtlas(entry.atlas)
-    elseif entry.texture then
-        d.tex:SetTexture(entry.texture)
-    end
-    d.tex:SetDesaturated(true)
-    d.tex:SetVertexColor(r, g, b)
-    d.tex:Show()
-    d.anim:SetFlipBookRows(entry.rows or 6)
-    d.anim:SetFlipBookColumns(entry.columns or 5)
-    d.anim:SetFlipBookFrames(entry.frames or 30)
-    d.anim:SetDuration(entry.duration or 1.0)
-    d.anim:SetFlipBookFrameWidth(entry.frameW or 0)
-    d.anim:SetFlipBookFrameHeight(entry.frameH or 0)
-    if d.ag:IsPlaying() then d.ag:Stop() end
-    d.ag:Play()
-end
-
-local function StopFlipBookGlow(frame)
-    if not frame._flipData then return end
-    frame._flipData.tex:Hide()
-    frame._flipData.ag:Stop()
 end
 
 function Display:ApplyZenithGlow()
