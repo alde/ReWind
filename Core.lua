@@ -111,8 +111,6 @@ end
 -- Zenith / Zenith Stomp cooldown tracking
 
 function Core:SPELL_UPDATE_COOLDOWN()
-    if not ReWind.db.profile.zenithAlert then return end
-
     local db = ReWind.db.profile
     if db.zenithTrackZenith then
         self:CheckZenithReady(ZENITH_ID, "zenithReady", "Zenith")
@@ -123,7 +121,7 @@ function Core:SPELL_UPDATE_COOLDOWN()
 end
 
 function Core:CheckZenithReady(spellId, flag, label)
-    if not C_SpellBook.IsSpellKnown(spellId) then return end
+    if not IsPlayerSpell(spellId) then return end
 
     local info = C_Spell.GetSpellCooldown(spellId)
     if not info then return end
@@ -132,7 +130,9 @@ function Core:CheckZenithReady(spellId, flag, label)
 
     if ready and not self[flag] then
         self[flag] = true
-        ReWind:PlayConfigSound("zenithSound")
+        if ReWind.db.profile.zenithAlert then
+            ReWind:PlayConfigSound("zenithSound")
+        end
         ReWind:SendMessage("REWIND_ZENITH_READY", label)
     elseif not ready and self[flag] then
         self[flag] = false
