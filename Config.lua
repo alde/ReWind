@@ -25,6 +25,9 @@ function ReWind:GetDefaults()
             zenithIconEnabled = true,
             zenithIconSize = 48,
             zenithIconAlpha = 1.0,
+            zenithGlowStyle = "glow",
+            zenithGlowColor = { r = 0.0, g = 0.9, b = 0.4 },
+            zenithGlowIntensity = 0.9,
             zenithIconPosition = nil,
             bgAlpha = 0.8,
             borderTexture = "Blizzard Tooltip",
@@ -346,7 +349,6 @@ local function GetOptions()
                         name = "Icon Opacity",
                         desc = "Opacity of the Zenith ready icon.",
                         order = 15,
-
                         min = 0.2, max = 1.0, step = 0.05,
                         isPercent = true,
                         get = function() return ReWind.db.profile.zenithIconAlpha end,
@@ -354,6 +356,57 @@ local function GetOptions()
                             ReWind.db.profile.zenithIconAlpha = val
                             local display = ReWind:GetModule("Display", true)
                             if display then display:UpdateZenithIconAppearance() end
+                        end,
+                    },
+                    glowHeader = {
+                        type = "header",
+                        name = "Glow Effect",
+                        order = 20,
+                    },
+                    zenithGlowStyle = {
+                        type = "select",
+                        name = "Style",
+                        desc = "Glow effect around the Zenith ready icon.",
+                        order = 21,
+                        values = {
+                            glow = "Glow",
+                            proc = "Proc (Blizzard)",
+                            none = "None",
+                        },
+                        get = function() return ReWind.db.profile.zenithGlowStyle end,
+                        set = function(_, val)
+                            ReWind.db.profile.zenithGlowStyle = val
+                            local display = ReWind:GetModule("Display", true)
+                            if display then display:ApplyZenithGlow() end
+                        end,
+                    },
+                    zenithGlowColor = {
+                        type = "color",
+                        name = "Color",
+                        desc = "Color of the glow effect (applies to Glow style).",
+                        order = 22,
+                        get = function()
+                            local c = ReWind.db.profile.zenithGlowColor
+                            return c.r, c.g, c.b
+                        end,
+                        set = function(_, r, g, b)
+                            ReWind.db.profile.zenithGlowColor = { r = r, g = g, b = b }
+                            local display = ReWind:GetModule("Display", true)
+                            if display then display:ApplyZenithGlow() end
+                        end,
+                    },
+                    zenithGlowIntensity = {
+                        type = "range",
+                        name = "Intensity",
+                        desc = "Peak brightness of the glow pulse.",
+                        order = 23,
+                        min = 0.2, max = 1.0, step = 0.05,
+                        isPercent = true,
+                        get = function() return ReWind.db.profile.zenithGlowIntensity end,
+                        set = function(_, val)
+                            ReWind.db.profile.zenithGlowIntensity = val
+                            local display = ReWind:GetModule("Display", true)
+                            if display then display:ApplyZenithGlow() end
                         end,
                     },
                 },

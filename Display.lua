@@ -404,13 +404,13 @@ function Display:GetZenithIcon()
     glowTex:SetAllPoints()
     glowTex:SetTexture("Interface\\Buttons\\UI-ActionButton-Border")
     glowTex:SetBlendMode("ADD")
-    glowTex:SetVertexColor(0.0, 0.9, 0.4)
     f.glowFrame = glow
+    f.glowTex = glowTex
 
     local ag = glow:CreateAnimationGroup()
     ag:SetLooping("BOUNCE")
     local pulse = ag:CreateAnimation("Alpha")
-    pulse:SetFromAlpha(0.4)
+    pulse:SetFromAlpha(0.3)
     pulse:SetToAlpha(0.9)
     pulse:SetDuration(0.8)
     pulse:SetSmoothing("IN_OUT")
@@ -433,8 +433,48 @@ function Display:UpdateZenithIconAppearance()
     local db = ReWind.db.profile
     local size = db.zenithIconSize
     self.zenithIcon:SetSize(size, size)
-    self.zenithIcon.glowFrame:SetSize(size * 1.7, size * 1.7)
     self.zenithIcon:SetAlpha(db.zenithIconAlpha)
+    self:ApplyZenithGlow()
+end
+
+function Display:ApplyZenithGlow()
+    if not self.zenithIcon then return end
+    local f = self.zenithIcon
+    local db = ReWind.db.profile
+    local style = db.zenithGlowStyle
+    local r, g, b = db.zenithGlowColor.r, db.zenithGlowColor.g, db.zenithGlowColor.b
+    local intensity = db.zenithGlowIntensity
+    local size = db.zenithIconSize
+
+    self:StopZenithGlow()
+
+    if style == "glow" then
+        f.glowFrame:SetSize(size * 1.7, size * 1.7)
+        f.glowTex:SetVertexColor(r, g, b)
+        f.ag:GetAnimations():SetFromAlpha(intensity * 0.3)
+        f.ag:GetAnimations():SetToAlpha(intensity)
+        f.glowFrame:Show()
+        if f:IsShown() and f:GetAlpha() > 0 then
+            f.ag:Play()
+        end
+    elseif style == "proc" then
+        f.glowFrame:Hide()
+        if ActionButton_ShowOverlayGlow and f:IsShown() and f:GetAlpha() > 0 then
+            ActionButton_ShowOverlayGlow(f)
+        end
+    else
+        f.glowFrame:Hide()
+    end
+end
+
+function Display:StopZenithGlow()
+    if not self.zenithIcon then return end
+    local f = self.zenithIcon
+    f.ag:Stop()
+    f.glowFrame:Hide()
+    if ActionButton_HideOverlayGlow then
+        ActionButton_HideOverlayGlow(f)
+    end
 end
 
 function Display:SetZenithIconAlpha(alpha)
@@ -447,9 +487,7 @@ function Display:ShowZenithIcon(label)
 
     local f = self:GetZenithIcon()
     local db = ReWind.db.profile
-    local size = db.zenithIconSize
-    f:SetSize(size, size)
-    f.glowFrame:SetSize(size * 1.7, size * 1.7)
+    f:SetSize(db.zenithIconSize, db.zenithIconSize)
     if db.zenithCombatOnly and not UnitAffectingCombat("player") then
         f:SetAlpha(0)
     else
@@ -460,12 +498,12 @@ function Display:ShowZenithIcon(label)
     local texture = spellInfo and spellInfo.iconID
     f.icon:SetTexture(texture or "Interface\\Icons\\INV_Misc_QuestionMark")
     f:Show()
-    f.ag:Play()
+    self:ApplyZenithGlow()
 end
 
 function Display:HideZenithIcon()
     if not self.zenithIcon then return end
-    self.zenithIcon.ag:Stop()
+    self:StopZenithGlow()
     self.zenithIcon:SetAlpha(0)
 end
 
