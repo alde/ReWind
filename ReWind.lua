@@ -47,7 +47,7 @@ function ReWind:PLAYER_SPECIALIZATION_CHANGED(_, unit)
 end
 
 function ReWind:EnableModules()
-    for _, name in ipairs({ "Core", "Display" }) do
+    for _, name in ipairs({ "Core", "Display", "Timeline" }) do
         local mod = self:GetModule(name, true)
         if mod and not mod:IsEnabled() then
             mod:Enable()
@@ -60,7 +60,7 @@ function ReWind:DisableModules()
     self.state.lastSpellId = nil
     self.state.masteryBroken = false
 
-    for _, name in ipairs({ "Display", "Core" }) do
+    for _, name in ipairs({ "Timeline", "Display", "Core" }) do
         local mod = self:GetModule(name, true)
         if mod and mod:IsEnabled() then
             mod:Disable()
@@ -81,6 +81,8 @@ function ReWind:OnSlashCommand(input)
         self:ToggleDisplay()
     elseif cmd == "config" or cmd == "options" then
         self:OpenConfig()
+    elseif cmd == "timeline" or cmd == "tl" then
+        self:ToggleTimeline()
     elseif cmd == "lock" then
         self:ToggleLock()
     elseif cmd == "reset" then
@@ -93,15 +95,17 @@ function ReWind:OnSlashCommand(input)
         self:GetModule("Core"):InjectTestData()
     else
         self:Print("ReWind v" .. self.VERSION)
-        self:Print("  /rw          — Toggle display")
-        self:Print("  /rw config   — Open options")
-        self:Print("  /rw lock     — Lock/unlock frame")
-        self:Print("  /rw reset    — Clear history")
-        self:Print("  /rw test     — Inject test data")
+        self:Print("  /rw            — Toggle display")
+        self:Print("  /rw config     — Open options")
+        self:Print("  /rw timeline   — Show last encounter timeline")
+        self:Print("  /rw lock       — Lock/unlock frame")
+        self:Print("  /rw reset      — Clear history")
+        self:Print("  /rw test       — Inject test data")
     end
 end
 
 -- Stubs — implemented by modules
 function ReWind:ToggleDisplay() end
 function ReWind:OpenConfig() end
+function ReWind:ToggleTimeline() end
 function ReWind:ToggleLock() end

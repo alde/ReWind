@@ -23,4 +23,5 @@ Libs\AceConsole-3.0\AceConsole-3.0.lua
 ReWind.lua
 Core.lua
 Display.lua
+Timeline.lua
 Config.lua

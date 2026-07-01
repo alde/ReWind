@@ -31,6 +31,8 @@ local function NewCombatStats()
         totalCasts = 0,
         breaks = 0,
         breakLog = {},
+        casts = {},       -- full cast log for timeline: { spellId, time, broke }
+        startTime = GetTime(),
     }
 end
 
@@ -85,19 +87,24 @@ function Core:RecordAbility(spellId)
         table.remove(state.history)
     end
 
+    local now = GetTime()
+    local castEntry = { spellId = spellId, time = now, broke = broke }
+
     if state.combat then
         state.combat.totalCasts = state.combat.totalCasts + 1
+        table.insert(state.combat.casts, castEntry)
         if broke then
             state.combat.breaks = state.combat.breaks + 1
-            table.insert(state.combat.breakLog, { spellId = spellId, time = GetTime() })
+            table.insert(state.combat.breakLog, { spellId = spellId, time = now })
         end
     end
 
     if state.keystone then
         state.keystone.totalCasts = state.keystone.totalCasts + 1
+        table.insert(state.keystone.casts, castEntry)
         if broke then
             state.keystone.breaks = state.keystone.breaks + 1
-            table.insert(state.keystone.breakLog, { spellId = spellId, time = GetTime() })
+            table.insert(state.keystone.breakLog, { spellId = spellId, time = now })
         end
     end
 
@@ -141,7 +148,10 @@ end
 function Core:PLAYER_REGEN_ENABLED()
     local combat = ReWind.state.combat
     if combat and combat.totalCasts > 0 then
+        combat.endTime = GetTime()
         self:PrintCombatReport(combat, "Combat")
+        ReWind.state.lastEncounter = combat
+        ReWind:SendMessage("REWIND_ENCOUNTER_END", combat)
     end
     ReWind.state.combat = nil
 
@@ -179,7 +189,10 @@ end
 function Core:EndKeystone()
     local ks = ReWind.state.keystone
     if ks and ks.totalCasts > 0 then
+        ks.endTime = GetTime()
         self:PrintCombatReport(ks, "Keystone")
+        ReWind.state.lastEncounter = ks
+        ReWind:SendMessage("REWIND_ENCOUNTER_END", ks)
     end
     ReWind.state.keystone = nil
 end
@@ -229,7 +242,14 @@ function Core:InjectTestData()
         self:RecordAbility(id)
     end
 
-    self:PrintCombatReport(ReWind.state.combat, "Test")
+    local combat = ReWind.state.combat
+    combat.endTime = GetTime()
+    self:PrintCombatReport(combat, "Test")
+    ReWind.state.lastEncounter = combat
     ReWind.state.combat = nil
+
+    local timeline = ReWind:GetModule("Timeline", true)
+    if timeline then timeline:Show(combat) end
+
     ReWind:Print("Injected test data (last two are Tiger Palm repeats).")
 end

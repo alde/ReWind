@@ -14,7 +14,10 @@ function ReWind:GetDefaults()
             combatReport = true,
             zenithAlert = true,
             assistedCombat = false,
+            timelineAutoShow = false,
             clearOnCombatEnd = false,
+            timelinePosition = nil,
+            timelineWidth = nil,
             position = nil,
         },
     }
@@ -146,11 +149,19 @@ local function GetOptions()
                             ReWind:SendMessage("REWIND_HISTORY_UPDATED")
                         end,
                     },
+                    timelineAutoShow = {
+                        type = "toggle",
+                        name = "Auto-show Timeline",
+                        desc = "Automatically show the ability timeline after each fight.",
+                        order = 5,
+                        get = function() return ReWind.db.profile.timelineAutoShow end,
+                        set = function(_, val) ReWind.db.profile.timelineAutoShow = val end,
+                    },
                     clearOnCombatEnd = {
                         type = "toggle",
                         name = "Clear on Combat End",
                         desc = "Wipe the ability history when you leave combat.",
-                        order = 5,
+                        order = 6,
                         get = function() return ReWind.db.profile.clearOnCombatEnd end,
                         set = function(_, val) ReWind.db.profile.clearOnCombatEnd = val end,
                     },
