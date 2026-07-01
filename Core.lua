@@ -132,6 +132,9 @@ function Core:CheckZenithReady(spellId, flag, label)
         self[flag] = true
         PlaySound(SOUND_ZENITH_READY, "Master")
         ReWind:SendMessage("REWIND_ZENITH_READY", label)
+    elseif not ready and self[flag] then
+        self[flag] = false
+        ReWind:SendMessage("REWIND_ZENITH_COOLDOWN", label)
     elseif not ready then
         self[flag] = false
     end
@@ -141,8 +144,6 @@ end
 
 function Core:PLAYER_REGEN_DISABLED()
     ReWind.state.combat = NewCombatStats()
-    self.zenithReady = nil
-    self.zenithStompReady = nil
 end
 
 function Core:PLAYER_REGEN_ENABLED()

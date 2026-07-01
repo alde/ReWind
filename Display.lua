@@ -11,6 +11,7 @@ local SEPARATOR_WIDTH = 6
 function Display:OnEnable()
     self:RegisterMessage("REWIND_HISTORY_UPDATED", "Refresh")
     self:RegisterMessage("REWIND_ZENITH_READY", "OnZenithReady")
+    self:RegisterMessage("REWIND_ZENITH_COOLDOWN", "OnZenithCooldown")
     self:RegisterEvent("PLAYER_ENTERING_WORLD")
 end
 
@@ -19,6 +20,7 @@ function Display:OnDisable()
     self:UnregisterAllEvents()
     if self.zenithFrame then self.zenithFrame:Hide() end
     if self.assistedFrame then self.assistedFrame:Hide() end
+    self:StopBorderGlow()
 end
 
 function Display:GetFrame()
@@ -311,6 +313,56 @@ function Display:OnZenithReady(_, label)
     zf:Show()
     zf.ag:Stop()
     zf.ag:Play()
+
+    if ReWind.db.profile.zenithBorderGlow then
+        self:StartBorderGlow()
+    end
+end
+
+function Display:OnZenithCooldown()
+    self:StopBorderGlow()
+end
+
+function Display:GetBorderGlow()
+    if self.borderGlow then return self.borderGlow end
+
+    local f = self:GetFrame()
+    local glow = CreateFrame("Frame", nil, f)
+    glow:SetFrameLevel(f:GetFrameLevel() + 5)
+    glow:SetAllPoints(f)
+
+    local tex = glow:CreateTexture(nil, "OVERLAY")
+    tex:SetPoint("TOPLEFT", -4, 4)
+    tex:SetPoint("BOTTOMRIGHT", 4, -4)
+    tex:SetTexture("Interface\\Buttons\\UI-ActionButton-Border")
+    tex:SetBlendMode("ADD")
+    tex:SetVertexColor(0.0, 0.9, 0.4)
+    glow.tex = tex
+
+    local ag = glow:CreateAnimationGroup()
+    ag:SetLooping("BOUNCE")
+    local pulse = ag:CreateAnimation("Alpha")
+    pulse:SetFromAlpha(0.4)
+    pulse:SetToAlpha(1.0)
+    pulse:SetDuration(0.8)
+    pulse:SetSmoothing("IN_OUT")
+    glow.ag = ag
+
+    glow:Hide()
+    self.borderGlow = glow
+    return glow
+end
+
+function Display:StartBorderGlow()
+    local glow = self:GetBorderGlow()
+    glow:Show()
+    glow.ag:Play()
+end
+
+function Display:StopBorderGlow()
+    if not self.borderGlow then return end
+    self.borderGlow.ag:Stop()
+    self.borderGlow:Hide()
 end
 
 -- Wire stubs
