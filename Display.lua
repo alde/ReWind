@@ -175,20 +175,31 @@ end
 
 function Display:Toggle()
     local f = self:GetFrame()
-    if f:IsShown() then
-        f:Hide()
-        ReWind.db.profile.shown = false
+    local db = ReWind.db.profile
+    if db.shown then
+        db.shown = false
+        f:SetAlpha(0)
     else
-        f:Show()
-        ReWind.db.profile.shown = true
+        db.shown = true
+        if db.panelCombatOnly and not UnitAffectingCombat("player") then
+            f:Show()
+            f:SetAlpha(0)
+        else
+            f:Show()
+            f:SetAlpha(1)
+        end
         self:Refresh()
     end
 end
 
 function Display:PLAYER_ENTERING_WORLD()
     local db = ReWind.db.profile
-    if db.shown and not db.panelCombatOnly then
-        self:GetFrame():Show()
+    if db.shown then
+        local f = self:GetFrame()
+        f:Show()
+        if db.panelCombatOnly then
+            f:SetAlpha(0)
+        end
         self:Refresh()
     end
 end
@@ -196,18 +207,20 @@ end
 function Display:PLAYER_REGEN_DISABLED()
     local db = ReWind.db.profile
     if db.shown and db.panelCombatOnly then
-        self:GetFrame():Show()
-        self:Refresh()
+        self:GetFrame():SetAlpha(1)
+    end
+    if db.zenithCombatOnly and self.zenithIcon and self.zenithIcon:IsShown() then
+        self:SetZenithIconAlpha(db.zenithIconAlpha)
     end
 end
 
 function Display:PLAYER_REGEN_ENABLED()
     local db = ReWind.db.profile
     if db.panelCombatOnly then
-        self:GetFrame():Hide()
+        self:GetFrame():SetAlpha(0)
     end
     if db.zenithCombatOnly then
-        self:HideZenithIcon()
+        self:SetZenithIconAlpha(0)
     end
 end
 
@@ -422,16 +435,24 @@ function Display:UpdateZenithIconAppearance()
     self.zenithIcon:SetAlpha(db.zenithIconAlpha)
 end
 
+function Display:SetZenithIconAlpha(alpha)
+    if not self.zenithIcon then return end
+    self.zenithIcon:SetAlpha(alpha)
+end
+
 function Display:ShowZenithIcon(label)
     if not ReWind.db.profile.zenithIconEnabled then return end
-    if ReWind.db.profile.zenithCombatOnly and not UnitAffectingCombat("player") then return end
 
     local f = self:GetZenithIcon()
     local db = ReWind.db.profile
     local size = db.zenithIconSize
     f:SetSize(size, size)
     f.glowFrame:SetSize(size * 1.7, size * 1.7)
-    f:SetAlpha(db.zenithIconAlpha)
+    if db.zenithCombatOnly and not UnitAffectingCombat("player") then
+        f:SetAlpha(0)
+    else
+        f:SetAlpha(db.zenithIconAlpha)
+    end
     local spellId = (label == "Zenith") and ZENITH_ID or ZENITH_STOMP_ID
     local spellInfo = C_Spell.GetSpellInfo(spellId)
     local texture = spellInfo and spellInfo.iconID
@@ -443,8 +464,7 @@ end
 function Display:HideZenithIcon()
     if not self.zenithIcon then return end
     self.zenithIcon.ag:Stop()
-    self.zenithIcon:SetAlpha(1)
-    self.zenithIcon:Hide()
+    self.zenithIcon:SetAlpha(0)
 end
 
 -- Wire stubs

@@ -81,7 +81,17 @@ local function GetOptions()
                             ReWind.db.profile.shown = val
                             local display = ReWind:GetModule("Display")
                             local f = display:GetFrame()
-                            if val then f:Show(); display:Refresh() else f:Hide() end
+                            if val then
+                                f:Show()
+                                if ReWind.db.profile.panelCombatOnly and not UnitAffectingCombat("player") then
+                                    f:SetAlpha(0)
+                                else
+                                    f:SetAlpha(1)
+                                end
+                                display:Refresh()
+                            else
+                                f:SetAlpha(0)
+                            end
                         end,
                     },
                     panelCombatOnly = {
@@ -90,7 +100,16 @@ local function GetOptions()
                         desc = "Only show the ability panel while in combat.",
                         order = 2,
                         get = function() return ReWind.db.profile.panelCombatOnly end,
-                        set = function(_, val) ReWind.db.profile.panelCombatOnly = val end,
+                        set = function(_, val)
+                            ReWind.db.profile.panelCombatOnly = val
+                            local display = ReWind:GetModule("Display")
+                            local f = display:GetFrame()
+                            if val and not UnitAffectingCombat("player") then
+                                f:SetAlpha(0)
+                            elseif not val and ReWind.db.profile.shown then
+                                f:SetAlpha(1)
+                            end
+                        end,
                     },
                     historyCount = {
                         type = "range",
@@ -209,7 +228,16 @@ local function GetOptions()
                         desc = "Only show the Zenith ready icon while in combat.",
                         order = 3,
                         get = function() return ReWind.db.profile.zenithCombatOnly end,
-                        set = function(_, val) ReWind.db.profile.zenithCombatOnly = val end,
+                        set = function(_, val)
+                            ReWind.db.profile.zenithCombatOnly = val
+                            local display = ReWind:GetModule("Display", true)
+                            if not display then return end
+                            if val and not UnitAffectingCombat("player") then
+                                display:SetZenithIconAlpha(0)
+                            elseif not val then
+                                display:SetZenithIconAlpha(ReWind.db.profile.zenithIconAlpha)
+                            end
+                        end,
                     },
                     zenithIconSize = {
                         type = "range",
