@@ -205,7 +205,7 @@ local function GetOptions()
                     assistedCombat = {
                         type = "toggle",
                         name = "Next Spell (Blizzard)",
-                        desc = "Show Blizzard's recommended next ability via C_AssistedCombat (12.0+ only). Take with a grain of salt.",
+                        desc = "Show Blizzard's recommended next ability. Take with a grain of salt.",
                         order = 5,
                         hidden = function() return C_AssistedCombat == nil end,
                         get = function() return ReWind.db.profile.assistedCombat end,
