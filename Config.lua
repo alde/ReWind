@@ -26,7 +26,7 @@ function ReWind:GetDefaults()
             zenithIconSize = 48,
             zenithIconAlpha = 1.0,
             zenithGlowStyle = "glow",
-            zenithGlowColor = { r = 0.0, g = 0.9, b = 0.4 },
+            zenithGlowColor = nil,
             zenithGlowIntensity = 0.9,
             zenithIconPosition = nil,
             bgAlpha = 0.8,
@@ -52,6 +52,21 @@ end
 
 local DEFAULT_BREAK_SOUNDKIT = 173248
 local DEFAULT_ZENITH_SOUNDKIT = 73280
+
+local function GetClassColor()
+    local _, class = UnitClass("player")
+    local color = RAID_CLASS_COLORS[class]
+    if color then
+        return color.r, color.g, color.b
+    end
+    return 0, 1, 0.59
+end
+
+local function GetZenithGlowColor()
+    local c = ReWind.db.profile.zenithGlowColor
+    if c then return c.r, c.g, c.b end
+    return GetClassColor()
+end
 
 local function GetSoundValues()
     local values = { Default = "Default" }
@@ -370,7 +385,6 @@ local function GetOptions()
                         order = 21,
                         values = {
                             glow = "Glow",
-                            proc = "Proc (Blizzard)",
                             none = "None",
                         },
                         get = function() return ReWind.db.profile.zenithGlowStyle end,
@@ -383,14 +397,22 @@ local function GetOptions()
                     zenithGlowColor = {
                         type = "color",
                         name = "Color",
-                        desc = "Color of the glow effect (applies to Glow style).",
+                        desc = "Color of the glow effect. Defaults to class color.",
                         order = 22,
-                        get = function()
-                            local c = ReWind.db.profile.zenithGlowColor
-                            return c.r, c.g, c.b
-                        end,
+                        get = function() return GetZenithGlowColor() end,
                         set = function(_, r, g, b)
                             ReWind.db.profile.zenithGlowColor = { r = r, g = g, b = b }
+                            local display = ReWind:GetModule("Display", true)
+                            if display then display:ApplyZenithGlow() end
+                        end,
+                    },
+                    zenithGlowClassColor = {
+                        type = "execute",
+                        name = "Class Color",
+                        desc = "Reset glow color to your class color.",
+                        order = 23,
+                        func = function()
+                            ReWind.db.profile.zenithGlowColor = nil
                             local display = ReWind:GetModule("Display", true)
                             if display then display:ApplyZenithGlow() end
                         end,
@@ -399,7 +421,7 @@ local function GetOptions()
                         type = "range",
                         name = "Intensity",
                         desc = "Peak brightness of the glow pulse.",
-                        order = 23,
+                        order = 24,
                         min = 0.2, max = 1.0, step = 0.05,
                         isPercent = true,
                         get = function() return ReWind.db.profile.zenithGlowIntensity end,

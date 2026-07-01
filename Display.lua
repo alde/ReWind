@@ -376,7 +376,8 @@ function Display:GetZenithIcon()
         insets = { left = 2, right = 2, top = 2, bottom = 2 },
     })
     f:SetBackdropColor(0.05, 0.05, 0.05, 0.8)
-    f:SetBackdropBorderColor(0.0, 0.8, 0.4, 0.9)
+    local gr, gg, gb = GetGlowColor()
+    f:SetBackdropBorderColor(gr, gg, gb, 0.9)
     f:SetFrameStrata("MEDIUM")
     f:SetClampedToScreen(true)
     f:SetMovable(true)
@@ -437,15 +438,25 @@ function Display:UpdateZenithIconAppearance()
     self:ApplyZenithGlow()
 end
 
+local function GetGlowColor()
+    local c = ReWind.db.profile.zenithGlowColor
+    if c then return c.r, c.g, c.b end
+    local _, class = UnitClass("player")
+    local color = RAID_CLASS_COLORS[class]
+    if color then return color.r, color.g, color.b end
+    return 0, 1, 0.59
+end
+
 function Display:ApplyZenithGlow()
     if not self.zenithIcon then return end
     local f = self.zenithIcon
     local db = ReWind.db.profile
     local style = db.zenithGlowStyle
-    local r, g, b = db.zenithGlowColor.r, db.zenithGlowColor.g, db.zenithGlowColor.b
+    local r, g, b = GetGlowColor()
     local intensity = db.zenithGlowIntensity
     local size = db.zenithIconSize
 
+    f:SetBackdropBorderColor(r, g, b, 0.9)
     self:StopZenithGlow()
 
     if style == "glow" then
@@ -457,11 +468,6 @@ function Display:ApplyZenithGlow()
         if f:IsShown() and f:GetAlpha() > 0 then
             f.ag:Play()
         end
-    elseif style == "proc" then
-        f.glowFrame:Hide()
-        if ActionButton_ShowOverlayGlow and f:IsShown() and f:GetAlpha() > 0 then
-            ActionButton_ShowOverlayGlow(f)
-        end
     else
         f.glowFrame:Hide()
     end
@@ -469,12 +475,8 @@ end
 
 function Display:StopZenithGlow()
     if not self.zenithIcon then return end
-    local f = self.zenithIcon
-    f.ag:Stop()
-    f.glowFrame:Hide()
-    if ActionButton_HideOverlayGlow then
-        ActionButton_HideOverlayGlow(f)
-    end
+    self.zenithIcon.ag:Stop()
+    self.zenithIcon.glowFrame:Hide()
 end
 
 function Display:SetZenithIconAlpha(alpha)
