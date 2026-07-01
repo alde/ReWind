@@ -2,7 +2,7 @@
 
 Combo Strikes mastery tracker for Windwalker Monks. Shows your recent ability history so you never break mastery, and tells you off when you do.
 
-Built for **Midnight 12.0.7**. Uses `UNIT_SPELLCAST_SUCCEEDED` instead of `COMBAT_LOG_EVENT_UNFILTERED`, so it works inside instances under the 12.0 addon restrictions where CLEU is no longer available.
+Retail only. Uses `UNIT_SPELLCAST_SUCCEEDED` instead of `COMBAT_LOG_EVENT_UNFILTERED` so it works inside instances under the current addon restrictions.
 
 ## Features
 
@@ -27,11 +27,11 @@ Sound and visual flash when Zenith or Zenith Stomp comes off cooldown. Toggleabl
 Scrollable cast log showing every ability used during a fight with timestamps and mastery break markers. Exportable as CSV — hit the Export button, Ctrl+A, Ctrl+C, and paste it wherever you like. No WarcraftLogs upload needed. Can auto-show after each fight or be opened manually with `/rw timeline`.
 
 ### Next Spell (Blizzard)
-Optional display of Blizzard's `C_AssistedCombat` recommended next ability (12.0+ only). Off by default — the config toggle is hidden on pre-12.0 clients. Take the suggestions with a healthy dose of scepticism.
+Optional display of Blizzard's `C_AssistedCombat` recommended next ability. Off by default — the config toggle is hidden if the API isn't available. Take the suggestions with a healthy dose of scepticism.
 
 ## Tracked Abilities
 
-The spell table matches the 13 active `Combo Strikes:` entries on Wowhead (the 14th, Storm, Earth, and Fire, was removed in Midnight):
+The spell table matches the 13 active `Combo Strikes:` entries on Wowhead:
 
 - Tiger Palm
 - Blackout Kick
