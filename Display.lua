@@ -13,6 +13,8 @@ function Display:OnEnable()
     self:RegisterMessage("REWIND_ZENITH_READY", "OnZenithReady")
     self:RegisterMessage("REWIND_ZENITH_COOLDOWN", "OnZenithCooldown")
     self:RegisterEvent("PLAYER_ENTERING_WORLD")
+    self:RegisterEvent("PLAYER_REGEN_DISABLED")
+    self:RegisterEvent("PLAYER_REGEN_ENABLED")
 end
 
 function Display:OnDisable()
@@ -100,8 +102,7 @@ function Display:GetIcon(index)
     container.icon = icon
 
     local glow = container:CreateTexture(nil, "OVERLAY")
-    glow:SetPoint("TOPLEFT", -3, 3)
-    glow:SetPoint("BOTTOMRIGHT", 3, -3)
+    glow:SetPoint("CENTER")
     glow:SetTexture("Interface\\Buttons\\UI-ActionButton-Border")
     glow:SetBlendMode("ADD")
     glow:SetAlpha(0)
@@ -135,6 +136,7 @@ function Display:Refresh()
             local iconPixels = math.floor(baseSize * scale)
 
             container:SetSize(iconPixels, iconPixels)
+            container.glow:SetSize(iconPixels * 1.7, iconPixels * 1.7)
             container:ClearAllPoints()
             container:SetPoint("BOTTOMLEFT", f, "BOTTOMLEFT", xOffset, 4 + BORDER_SIZE)
             container:SetAlpha(alpha)
@@ -184,9 +186,28 @@ function Display:Toggle()
 end
 
 function Display:PLAYER_ENTERING_WORLD()
-    if ReWind.db.profile.shown then
+    local db = ReWind.db.profile
+    if db.shown and not db.panelCombatOnly then
         self:GetFrame():Show()
         self:Refresh()
+    end
+end
+
+function Display:PLAYER_REGEN_DISABLED()
+    local db = ReWind.db.profile
+    if db.shown and db.panelCombatOnly then
+        self:GetFrame():Show()
+        self:Refresh()
+    end
+end
+
+function Display:PLAYER_REGEN_ENABLED()
+    local db = ReWind.db.profile
+    if db.panelCombatOnly then
+        self:GetFrame():Hide()
+    end
+    if db.zenithCombatOnly then
+        self:HideZenithIcon()
     end
 end
 
@@ -362,8 +383,7 @@ function Display:GetZenithIcon()
     f.icon = icon
 
     local glow = CreateFrame("Frame", nil, f)
-    glow:SetPoint("TOPLEFT", -2, 2)
-    glow:SetPoint("BOTTOMRIGHT", 2, -2)
+    glow:SetPoint("CENTER")
     glow:SetFrameLevel(f:GetFrameLevel() + 1)
     local glowTex = glow:CreateTexture(nil, "OVERLAY")
     glowTex:SetAllPoints()
@@ -396,16 +416,21 @@ end
 function Display:UpdateZenithIconAppearance()
     if not self.zenithIcon then return end
     local db = ReWind.db.profile
-    self.zenithIcon:SetSize(db.zenithIconSize, db.zenithIconSize)
+    local size = db.zenithIconSize
+    self.zenithIcon:SetSize(size, size)
+    self.zenithIcon.glowFrame:SetSize(size * 1.7, size * 1.7)
     self.zenithIcon:SetAlpha(db.zenithIconAlpha)
 end
 
 function Display:ShowZenithIcon(label)
     if not ReWind.db.profile.zenithIconEnabled then return end
+    if ReWind.db.profile.zenithCombatOnly and not UnitAffectingCombat("player") then return end
 
     local f = self:GetZenithIcon()
     local db = ReWind.db.profile
-    f:SetSize(db.zenithIconSize, db.zenithIconSize)
+    local size = db.zenithIconSize
+    f:SetSize(size, size)
+    f.glowFrame:SetSize(size * 1.7, size * 1.7)
     f:SetAlpha(db.zenithIconAlpha)
     local spellId = (label == "Zenith") and ZENITH_ID or ZENITH_STOMP_ID
     local spellInfo = C_Spell.GetSpellInfo(spellId)
