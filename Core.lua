@@ -20,9 +20,6 @@ local COMBO_STRIKES_SPELLS = {
     [1272696] = true, -- Zenith Stomp
 }
 
-local SOUND_BREAK = 173248      -- go_stackofwood_break02
-local SOUND_ZENITH_READY = 73280 -- ui_orderhall_talent_ready_toast
-
 local ZENITH_ID = 1249625
 local ZENITH_STOMP_ID = 1272696
 
@@ -72,7 +69,7 @@ function Core:RecordAbility(spellId)
     state.masteryBroken = broke
 
     if broke and ReWind.db.profile.soundEnabled then
-        ReWind:PlayConfigSound("breakSound", SOUND_BREAK)
+        ReWind:PlayConfigSound("breakSound")
     end
 
     state.lastSpellId = spellId
@@ -135,7 +132,7 @@ function Core:CheckZenithReady(spellId, flag, label)
 
     if ready and not self[flag] then
         self[flag] = true
-        ReWind:PlayConfigSound("zenithSound", SOUND_ZENITH_READY)
+        ReWind:PlayConfigSound("zenithSound")
         ReWind:SendMessage("REWIND_ZENITH_READY", label)
     elseif not ready and self[flag] then
         self[flag] = false

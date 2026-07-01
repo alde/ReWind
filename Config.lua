@@ -13,8 +13,8 @@ function ReWind:GetDefaults()
             opacityStep = 0.12,
             minOpacity = 0.3,
             soundEnabled = true,
-            breakSound = "Default",
-            zenithSound = "Default",
+            breakSound = "raid_warning",
+            zenithSound = "talent_ready",
             combatReport = true,
             zenithAlert = true,
             assistedCombat = false,
@@ -40,20 +40,36 @@ function ReWind:GetDefaults()
     }
 end
 
-function ReWind:PlayConfigSound(settingKey, defaultSoundKit)
-    local name = self.db.profile[settingKey]
-    if name == "Default" then
-        PlaySound(defaultSoundKit, "Master")
-    elseif name == "None" then
-        return
-    else
-        local path = LSM:Fetch("sound", name)
-        if path then PlaySoundFile(path, "Master") end
-    end
+local SOUND_LIST = {
+    { key = "wood_break",     name = "Wood Break (Default Break)",  id = 173248 },
+    { key = "talent_ready",   name = "Talent Ready (Default Zenith)", id = 73280 },
+    { key = "raid_warning",   name = "Raid Warning",                id = 8959 },
+    { key = "ready_check",    name = "Ready Check",                 id = 8960 },
+    { key = "alarm1",         name = "Alarm Clock 1",               id = 12867 },
+    { key = "alarm2",         name = "Alarm Clock 2",               id = 12889 },
+    { key = "alarm3",         name = "Alarm Clock 3",               id = 12890 },
+    { key = "pvp_flag",       name = "PvP Flag Taken",              id = 8174 },
+    { key = "levelup",        name = "Level Up",                    id = 888 },
+    { key = "map_ping",       name = "Map Ping",                    id = 3175 },
+    { key = "loot_coin",      name = "Loot Coin",                   id = 120 },
+    { key = "quest_complete", name = "Quest Complete",               id = 878 },
+    { key = "none",           name = "None",                        id = nil },
+}
+
+local SOUND_BY_KEY = {}
+local SOUND_VALUES = {}
+for _, entry in ipairs(SOUND_LIST) do
+    SOUND_BY_KEY[entry.key] = entry
+    SOUND_VALUES[entry.key] = entry.name
 end
 
-local DEFAULT_BREAK_SOUNDKIT = 173248
-local DEFAULT_ZENITH_SOUNDKIT = 73280
+function ReWind:PlayConfigSound(settingKey)
+    local key = self.db.profile[settingKey]
+    local entry = SOUND_BY_KEY[key]
+    if entry and entry.id then
+        PlaySound(entry.id, "Master")
+    end
+end
 
 local function GetClassColor()
     local _, class = UnitClass("player")
@@ -70,13 +86,6 @@ local function GetZenithGlowColor()
     return GetClassColor()
 end
 
-local function GetSoundValues()
-    local values = { Default = "Default" }
-    for k, v in pairs(LSM:HashTable("sound")) do
-        values[k] = k
-    end
-    return values
-end
 
 function ReWind:GetBorderTexture()
     local name = self.db.profile.borderTexture
@@ -320,7 +329,7 @@ local function GetOptions()
                         name = "Sound",
                         desc = "Sound to play when a tracked spell comes off cooldown.",
                         order = 4,
-                        values = GetSoundValues,
+                        values = SOUND_VALUES,
                         get = function() return ReWind.db.profile.zenithSound end,
                         set = function(_, val) ReWind.db.profile.zenithSound = val end,
                     },
@@ -329,7 +338,7 @@ local function GetOptions()
                         name = "Test",
                         desc = "Preview the selected zenith sound.",
                         order = 5,
-                        func = function() ReWind:PlayConfigSound("zenithSound", DEFAULT_ZENITH_SOUNDKIT) end,
+                        func = function() ReWind:PlayConfigSound("zenithSound") end,
                     },
                     iconHeader = {
                         type = "header",
@@ -487,7 +496,7 @@ local function GetOptions()
                         name = "Sound",
                         desc = "Sound to play on mastery break.",
                         order = 12,
-                        values = GetSoundValues,
+                        values = SOUND_VALUES,
                         get = function() return ReWind.db.profile.breakSound end,
                         set = function(_, val) ReWind.db.profile.breakSound = val end,
                     },
@@ -496,7 +505,7 @@ local function GetOptions()
                         name = "Test",
                         desc = "Preview the selected break sound.",
                         order = 13,
-                        func = function() ReWind:PlayConfigSound("breakSound", DEFAULT_BREAK_SOUNDKIT) end,
+                        func = function() ReWind:PlayConfigSound("breakSound") end,
                     },
                     behaviourHeader = {
                         type = "header",
