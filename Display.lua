@@ -25,14 +25,6 @@ function Display:GetFrame()
     if self.frame then return self.frame end
 
     local f = CreateFrame("Frame", "ReWindPanel", UIParent, "BackdropTemplate")
-    f:SetBackdrop({
-        bgFile = "Interface\\Tooltips\\UI-Tooltip-Background",
-        edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
-        tile = true, tileSize = 16, edgeSize = 12,
-        insets = { left = 2, right = 2, top = 2, bottom = 2 },
-    })
-    f:SetBackdropColor(0.05, 0.05, 0.05, 0.8)
-    f:SetBackdropBorderColor(0.3, 0.3, 0.3, 0.8)
     f:SetFrameStrata("MEDIUM")
     f:SetClampedToScreen(true)
     f:SetMovable(true)
@@ -49,6 +41,7 @@ function Display:GetFrame()
 
     f.icons = {}
     self.frame = f
+    ReWind:ApplyAppearance()
     self:RestorePosition()
     self:LayoutFrame()
 
@@ -75,8 +68,9 @@ function Display:LayoutFrame()
     local f = self:GetFrame()
     local db = ReWind.db.profile
     local iconSize = db.iconSize
-    local count = db.historyCount
-    local totalWidth = (iconSize * count) + (PADDING * (count - 1)) + (BORDER_SIZE * 2) + 8
+    local visible = math.min(#ReWind.state.history, db.historyCount)
+    if visible == 0 then visible = 1 end
+    local totalWidth = (iconSize * visible) + (PADDING * (visible - 1)) + (BORDER_SIZE * 2) + 8
 
     if self:ShouldShowAssisted() then
         totalWidth = totalWidth + SEPARATOR_WIDTH + iconSize + PADDING
@@ -163,15 +157,7 @@ function Display:Refresh()
             container:Show()
             xOffset = xOffset + iconPixels + PADDING
         else
-            container:SetSize(math.floor(baseSize * 0.6), math.floor(baseSize * 0.6))
-            container:ClearAllPoints()
-            container:SetPoint("BOTTOMLEFT", f, "BOTTOMLEFT", xOffset, 4 + BORDER_SIZE)
-            container:SetAlpha(0.2)
-            container.icon:SetTexture("Interface\\Icons\\INV_Misc_QuestionMark")
-            container.border:SetColorTexture(0.2, 0.2, 0.2, 0.5)
-            container.glow:SetAlpha(0)
-            container:Show()
-            xOffset = xOffset + math.floor(baseSize * 0.6) + PADDING
+            container:Hide()
         end
     end
 

@@ -1,5 +1,6 @@
 local ReWind = _G.ReWind
 local Config = ReWind:NewModule("Config")
+local LSM = LibStub("LibSharedMedia-3.0")
 
 function ReWind:GetDefaults()
     return {
@@ -16,11 +17,41 @@ function ReWind:GetDefaults()
             assistedCombat = false,
             timelineAutoShow = false,
             clearOnCombatEnd = false,
+            bgAlpha = 0.8,
+            borderTexture = "Blizzard Tooltip",
             timelinePosition = nil,
             timelineWidth = nil,
             position = nil,
         },
     }
+end
+
+function ReWind:GetBorderTexture()
+    local name = self.db.profile.borderTexture
+    if name == "None" then return nil end
+    return LSM:Fetch("border", name)
+end
+
+function ReWind:ApplyAppearance()
+    local borderPath = self:GetBorderTexture()
+    local backdrop = {
+        bgFile = "Interface\\Tooltips\\UI-Tooltip-Background",
+        tile = true, tileSize = 16,
+        insets = { left = 2, right = 2, top = 2, bottom = 2 },
+    }
+    if borderPath then
+        backdrop.edgeFile = borderPath
+        backdrop.edgeSize = 12
+    end
+
+    local opacity = self.db.profile.bgAlpha
+
+    local display = self:GetModule("Display", true)
+    if display and display.frame then
+        display.frame:SetBackdrop(backdrop)
+        display.frame:SetBackdropColor(0.05, 0.05, 0.05, opacity)
+        display.frame:SetBackdropBorderColor(0.3, 0.3, 0.3, 0.8)
+    end
 end
 
 local function GetOptions()
@@ -103,6 +134,31 @@ local function GetOptions()
                         set = function(_, val)
                             ReWind.db.profile.minOpacity = val
                             ReWind:SendMessage("REWIND_HISTORY_UPDATED")
+                        end,
+                    },
+                    bgAlpha = {
+                        type = "range",
+                        name = "Background Opacity",
+                        desc = "Transparency of the panel background.",
+                        order = 7,
+                        min = 0, max = 1.0, step = 0.05,
+                        isPercent = true,
+                        get = function() return ReWind.db.profile.bgAlpha end,
+                        set = function(_, val)
+                            ReWind.db.profile.bgAlpha = val
+                            ReWind:ApplyAppearance()
+                        end,
+                    },
+                    borderTexture = {
+                        type = "select",
+                        dialogControl = "LSM30_Border",
+                        name = "Border",
+                        order = 8,
+                        values = LSM:HashTable("border"),
+                        get = function() return ReWind.db.profile.borderTexture end,
+                        set = function(_, val)
+                            ReWind.db.profile.borderTexture = val
+                            ReWind:ApplyAppearance()
                         end,
                     },
                 },

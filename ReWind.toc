@@ -18,6 +18,8 @@ Libs\AceEvent-3.0\AceEvent-3.0.lua
 Libs\AceGUI-3.0\AceGUI-3.0.xml
 Libs\AceConfig-3.0\AceConfig-3.0.xml
 Libs\AceConsole-3.0\AceConsole-3.0.lua
+Libs\LibSharedMedia-3.0\lib.xml
+Libs\AceGUI-3.0-SharedMediaWidgets\widget.xml
 
 ## Core
 ReWind.lua

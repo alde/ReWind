@@ -126,7 +126,7 @@ function Core:CheckZenithReady(spellId, flag, label)
     local info = C_Spell.GetSpellCooldown(spellId)
     if not info then return end
 
-    local ready = (info.duration == 0) or (info.startTime + info.duration - GetTime() <= 0)
+    local ready = not info.isActive
 
     if ready and not self[flag] then
         self[flag] = true
