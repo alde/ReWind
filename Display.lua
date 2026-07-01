@@ -447,6 +447,57 @@ local function GetGlowColor()
     return 0, 1, 0.59
 end
 
+local FLIPBOOK_STYLES = {
+    proc = {
+        atlas = "UI-HUD-ActionBar-Proc-Loop-Flipbook",
+        rows = 6, columns = 5, frames = 30, duration = 1.0,
+        texPadding = 1.4,
+    },
+    ants = {
+        texture = "Interface\\SpellActivationOverlay\\IconAlertAnts",
+        rows = 5, columns = 5, frames = 22, duration = 0.3,
+        frameW = 48, frameH = 48, texPadding = 1.25,
+    },
+}
+
+local function StartFlipBookGlow(frame, size, entry, r, g, b)
+    local texSize = size * (entry.texPadding or 1)
+
+    if not frame._flipData then
+        local tex = frame:CreateTexture(nil, "OVERLAY", nil, 7)
+        tex:SetPoint("CENTER")
+        local ag = tex:CreateAnimationGroup()
+        ag:SetLooping("REPEAT")
+        local anim = ag:CreateAnimation("FlipBook")
+        frame._flipData = { tex = tex, ag = ag, anim = anim }
+    end
+
+    local d = frame._flipData
+    d.tex:SetSize(texSize, texSize)
+    if entry.atlas then
+        d.tex:SetAtlas(entry.atlas)
+    elseif entry.texture then
+        d.tex:SetTexture(entry.texture)
+    end
+    d.tex:SetDesaturated(true)
+    d.tex:SetVertexColor(r, g, b)
+    d.tex:Show()
+    d.anim:SetFlipBookRows(entry.rows or 6)
+    d.anim:SetFlipBookColumns(entry.columns or 5)
+    d.anim:SetFlipBookFrames(entry.frames or 30)
+    d.anim:SetDuration(entry.duration or 1.0)
+    d.anim:SetFlipBookFrameWidth(entry.frameW or 0)
+    d.anim:SetFlipBookFrameHeight(entry.frameH or 0)
+    if d.ag:IsPlaying() then d.ag:Stop() end
+    d.ag:Play()
+end
+
+local function StopFlipBookGlow(frame)
+    if not frame._flipData then return end
+    frame._flipData.tex:Hide()
+    frame._flipData.ag:Stop()
+end
+
 function Display:ApplyZenithGlow()
     if not self.zenithIcon then return end
     local f = self.zenithIcon
@@ -459,17 +510,19 @@ function Display:ApplyZenithGlow()
     f:SetBackdropBorderColor(r, g, b, 0.9)
     self:StopZenithGlow()
 
+    local visible = f:IsShown() and f:GetAlpha() > 0
+
     if style == "glow" then
         f.glowFrame:SetSize(size * 1.7, size * 1.7)
         f.glowTex:SetVertexColor(r, g, b)
         f.ag:GetAnimations():SetFromAlpha(intensity * 0.3)
         f.ag:GetAnimations():SetToAlpha(intensity)
         f.glowFrame:Show()
-        if f:IsShown() and f:GetAlpha() > 0 then
-            f.ag:Play()
+        if visible then f.ag:Play() end
+    elseif FLIPBOOK_STYLES[style] then
+        if visible then
+            StartFlipBookGlow(f, size, FLIPBOOK_STYLES[style], r, g, b)
         end
-    else
-        f.glowFrame:Hide()
     end
 end
 
@@ -477,6 +530,7 @@ function Display:StopZenithGlow()
     if not self.zenithIcon then return end
     self.zenithIcon.ag:Stop()
     self.zenithIcon.glowFrame:Hide()
+    StopFlipBookGlow(self.zenithIcon)
 end
 
 function Display:SetZenithIconAlpha(alpha)

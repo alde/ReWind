@@ -384,7 +384,9 @@ local function GetOptions()
                         desc = "Glow effect around the Zenith ready icon.",
                         order = 21,
                         values = {
-                            glow = "Glow",
+                            glow = "Pulse",
+                            proc = "Proc",
+                            ants = "Ants (Classic)",
                             none = "None",
                         },
                         get = function() return ReWind.db.profile.zenithGlowStyle end,
