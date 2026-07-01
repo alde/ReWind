@@ -20,7 +20,7 @@ function Display:OnDisable()
     self:UnregisterAllEvents()
     if self.zenithFrame then self.zenithFrame:Hide() end
     if self.assistedFrame then self.assistedFrame:Hide() end
-    self:StopBorderGlow()
+    self:HideZenithIcon()
 end
 
 function Display:GetFrame()
@@ -313,55 +313,98 @@ function Display:OnZenithReady(_, label)
     zf.ag:Stop()
     zf.ag:Play()
 
-    if ReWind.db.profile.zenithBorderGlow then
-        self:StartBorderGlow()
-    end
+    self:ShowZenithIcon(label)
 end
 
 function Display:OnZenithCooldown()
-    self:StopBorderGlow()
+    self:HideZenithIcon()
 end
 
-function Display:GetBorderGlow()
-    if self.borderGlow then return self.borderGlow end
+-- Standalone movable Zenith ready icon
 
-    local f = self:GetFrame()
-    local glow = CreateFrame("Frame", nil, f)
-    glow:SetFrameLevel(f:GetFrameLevel() + 5)
-    glow:SetAllPoints(f)
+local ZENITH_ID = 1249625
+local ZENITH_STOMP_ID = 1272696
+local ZENITH_ICON_SIZE = 48
 
-    local tex = glow:CreateTexture(nil, "OVERLAY")
-    tex:SetPoint("TOPLEFT", -4, 4)
-    tex:SetPoint("BOTTOMRIGHT", 4, -4)
-    tex:SetTexture("Interface\\Buttons\\UI-ActionButton-Border")
-    tex:SetBlendMode("ADD")
-    tex:SetVertexColor(0.0, 0.9, 0.4)
-    glow.tex = tex
+function Display:GetZenithIcon()
+    if self.zenithIcon then return self.zenithIcon end
 
-    local ag = glow:CreateAnimationGroup()
+    local f = CreateFrame("Frame", "ReWindZenithIcon", UIParent, "BackdropTemplate")
+    f:SetSize(ZENITH_ICON_SIZE, ZENITH_ICON_SIZE)
+    f:SetBackdrop({
+        bgFile = "Interface\\Tooltips\\UI-Tooltip-Background",
+        edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
+        tile = true, tileSize = 16, edgeSize = 12,
+        insets = { left = 2, right = 2, top = 2, bottom = 2 },
+    })
+    f:SetBackdropColor(0.05, 0.05, 0.05, 0.8)
+    f:SetBackdropBorderColor(0.0, 0.8, 0.4, 0.9)
+    f:SetFrameStrata("MEDIUM")
+    f:SetClampedToScreen(true)
+    f:SetMovable(true)
+    f:EnableMouse(true)
+    f:RegisterForDrag("LeftButton")
+    f:SetScript("OnDragStart", function(self)
+        if not ReWind.db.profile.locked then self:StartMoving() end
+    end)
+    f:SetScript("OnDragStop", function(self)
+        self:StopMovingOrSizing()
+        local point, _, relPoint, x, y = self:GetPoint()
+        ReWind.db.profile.zenithIconPosition = { point = point, relPoint = relPoint, x = x, y = y }
+    end)
+
+    local icon = f:CreateTexture(nil, "ARTWORK")
+    icon:SetPoint("TOPLEFT", 3, -3)
+    icon:SetPoint("BOTTOMRIGHT", -3, 3)
+    icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+    f.icon = icon
+
+    local glow = f:CreateTexture(nil, "OVERLAY")
+    glow:SetPoint("TOPLEFT", -4, 4)
+    glow:SetPoint("BOTTOMRIGHT", 4, -4)
+    glow:SetTexture("Interface\\Buttons\\UI-ActionButton-Border")
+    glow:SetBlendMode("ADD")
+    glow:SetVertexColor(0.0, 0.9, 0.4)
+    f.glow = glow
+
+    local ag = f:CreateAnimationGroup()
     ag:SetLooping("BOUNCE")
     local pulse = ag:CreateAnimation("Alpha")
-    pulse:SetFromAlpha(0.4)
+    pulse:SetFromAlpha(0.6)
     pulse:SetToAlpha(1.0)
     pulse:SetDuration(0.8)
     pulse:SetSmoothing("IN_OUT")
-    glow.ag = ag
+    f.ag = ag
 
-    glow:Hide()
-    self.borderGlow = glow
-    return glow
+    local pos = ReWind.db.profile.zenithIconPosition
+    if pos then
+        f:SetPoint(pos.point, UIParent, pos.relPoint, pos.x, pos.y)
+    else
+        f:SetPoint("CENTER", UIParent, "CENTER", 0, -150)
+    end
+
+    f:Hide()
+    self.zenithIcon = f
+    return f
 end
 
-function Display:StartBorderGlow()
-    local glow = self:GetBorderGlow()
-    glow:Show()
-    glow.ag:Play()
+function Display:ShowZenithIcon(label)
+    if not ReWind.db.profile.zenithIconEnabled then return end
+
+    local f = self:GetZenithIcon()
+    local spellId = (label == "Zenith") and ZENITH_ID or ZENITH_STOMP_ID
+    local spellInfo = C_Spell.GetSpellInfo(spellId)
+    local texture = spellInfo and spellInfo.iconID
+    f.icon:SetTexture(texture or "Interface\\Icons\\INV_Misc_QuestionMark")
+    f:Show()
+    f.ag:Play()
 end
 
-function Display:StopBorderGlow()
-    if not self.borderGlow then return end
-    self.borderGlow.ag:Stop()
-    self.borderGlow:Hide()
+function Display:HideZenithIcon()
+    if not self.zenithIcon then return end
+    self.zenithIcon.ag:Stop()
+    self.zenithIcon:SetAlpha(1)
+    self.zenithIcon:Hide()
 end
 
 -- Wire stubs

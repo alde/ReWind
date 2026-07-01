@@ -17,7 +17,8 @@ function ReWind:GetDefaults()
             assistedCombat = false,
             timelineAutoShow = false,
             clearOnCombatEnd = false,
-            zenithBorderGlow = true,
+            zenithIconEnabled = true,
+            zenithIconPosition = nil,
             bgAlpha = 0.8,
             borderTexture = "Blizzard Tooltip",
             timelinePosition = nil,
@@ -194,13 +195,13 @@ local function GetOptions()
                         get = function() return ReWind.db.profile.zenithAlert end,
                         set = function(_, val) ReWind.db.profile.zenithAlert = val end,
                     },
-                    zenithBorderGlow = {
+                    zenithIconEnabled = {
                         type = "toggle",
-                        name = "Zenith Border Glow",
-                        desc = "Pulse the panel border while Zenith or Zenith Stomp is off cooldown.",
+                        name = "Zenith Ready Icon",
+                        desc = "Show a standalone spell icon while Zenith or Zenith Stomp is off cooldown. Drag to reposition.",
                         order = 4,
-                        get = function() return ReWind.db.profile.zenithBorderGlow end,
-                        set = function(_, val) ReWind.db.profile.zenithBorderGlow = val end,
+                        get = function() return ReWind.db.profile.zenithIconEnabled end,
+                        set = function(_, val) ReWind.db.profile.zenithIconEnabled = val end,
                     },
                     assistedCombat = {
                         type = "toggle",
