@@ -7,7 +7,6 @@ ReWind.VERSION = "1"
 local WW_SPEC_ID = 269
 
 ReWind.ZENITH_ID = 1249625
-ReWind.ZENITH_STOMP_ID = 1272696
 
 ReWind.state = {
     history = {},

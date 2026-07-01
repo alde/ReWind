@@ -530,8 +530,7 @@ function Display:ShowZenithIcon(label)
     else
         f:SetAlpha(db.zenithIconAlpha)
     end
-    local spellId = (label == "Zenith") and ReWind.ZENITH_ID or ReWind.ZENITH_STOMP_ID
-    local spellInfo = C_Spell.GetSpellInfo(spellId)
+    local spellInfo = C_Spell.GetSpellInfo(ReWind.ZENITH_ID)
     local texture = spellInfo and spellInfo.iconID
     f.icon:SetTexture(texture or "Interface\\Icons\\INV_Misc_QuestionMark")
     f:Show()
