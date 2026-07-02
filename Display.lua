@@ -282,6 +282,7 @@ function Display:Toggle()
 end
 
 function Display:PLAYER_ENTERING_WORLD()
+    keybindCacheDirty = true
     self:UpdatePanelVisibility()
     if ReWind.db.profile.shown then self:Refresh() end
 end
