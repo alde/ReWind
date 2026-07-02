@@ -135,14 +135,17 @@ function Auras:UNIT_AURA(_, unit)
 
     for spellId, aura in pairs(current) do
         if not previous[spellId] then
+            ReWind:Debug("Aura gained:", aura.name, "stacks:", aura.stacks)
             ReWind:SendMessage("REWIND_AURA_GAINED", spellId, aura)
         elseif aura.stacks ~= previous[spellId].stacks then
+            ReWind:Debug("Aura stacks:", aura.name, previous[spellId].stacks, "->", aura.stacks)
             ReWind:SendMessage("REWIND_AURA_STACKS", spellId, aura)
         end
     end
 
     for spellId in pairs(previous) do
         if not current[spellId] then
+            ReWind:Debug("Aura lost:", TRACKED_AURAS[spellId] and TRACKED_AURAS[spellId].name or spellId)
             ReWind:SendMessage("REWIND_AURA_LOST", spellId)
         end
     end

@@ -5,6 +5,7 @@ local LSM = LibStub("LibSharedMedia-3.0")
 function ReWind:GetDefaults()
     return {
         profile = {
+            debug = false,
             shown = true,
             locked = false,
             historyCount = 6,

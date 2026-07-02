@@ -8,6 +8,12 @@ local WW_SPEC_ID = 269
 
 ReWind.ZENITH_ID = 1249625
 
+function ReWind:Debug(...)
+    if self.db and self.db.profile.debug then
+        self:Print("|cff888888[debug]|r", ...)
+    end
+end
+
 ReWind.state = {
     history = {},
     lastSpellId = nil,
@@ -163,6 +169,9 @@ function ReWind:OnSlashCommand(input)
         self.state.masteryBroken = false
         self:SendMessage("REWIND_HISTORY_UPDATED")
         self:Print("History cleared.")
+    elseif cmd == "debug" then
+        self.db.profile.debug = not self.db.profile.debug
+        self:Print("Debug " .. (self.db.profile.debug and "enabled" or "disabled") .. ".")
     elseif cmd == "test" then
         self:GetModule("Core"):InjectTestData()
     else
@@ -172,6 +181,7 @@ function ReWind:OnSlashCommand(input)
         self:Print("  /rw timeline   — Show last encounter timeline")
         self:Print("  /rw lock       — Lock/unlock frame")
         self:Print("  /rw reset      — Clear history")
+        self:Print("  /rw debug      — Toggle debug logging")
         self:Print("  /rw test       — Inject test data")
     end
 end

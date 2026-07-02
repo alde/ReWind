@@ -75,7 +75,9 @@ function Core:RecordAbility(spellId)
 
     if spellId == TIGER_PALM_ID and ReWind.db.profile.zenithWasteAlert then
         local auras = ReWind:GetModule("Auras", true)
-        if auras and auras:IsActive(ReWind.ZENITH_ID) then
+        local zenithActive = auras and auras:IsActive(ReWind.ZENITH_ID)
+        ReWind:Debug("Tiger Palm cast, Zenith active:", tostring(zenithActive))
+        if zenithActive then
             ReWind:PlayConfigSound("zenithWasteSound")
             ReWind:SendMessage("REWIND_ZENITH_WASTE", spellId)
         end
