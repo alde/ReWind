@@ -123,11 +123,16 @@ function Display:GetIcon(index)
     local border = container:CreateTexture(nil, "BACKGROUND")
     border:SetAllPoints()
     border:SetColorTexture(0.3, 0.3, 0.3, 0.8)
+    if msqHistory then border:Hide() end
     container.border = border
 
     local icon = container:CreateTexture(nil, "ARTWORK")
-    icon:SetPoint("TOPLEFT", BORDER_SIZE, -BORDER_SIZE)
-    icon:SetPoint("BOTTOMRIGHT", -BORDER_SIZE, BORDER_SIZE)
+    if msqHistory then
+        icon:SetAllPoints()
+    else
+        icon:SetPoint("TOPLEFT", BORDER_SIZE, -BORDER_SIZE)
+        icon:SetPoint("BOTTOMRIGHT", -BORDER_SIZE, BORDER_SIZE)
+    end
     icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
     container.icon = icon
 
@@ -187,11 +192,15 @@ function Display:Refresh()
             container.icon:SetTexture(texture or "Interface\\Icons\\INV_Misc_QuestionMark")
 
             if entry.broke then
-                container.border:SetColorTexture(0.9, 0.1, 0.1, 1.0)
+                if not msqHistory then
+                    container.border:SetColorTexture(0.9, 0.1, 0.1, 1.0)
+                end
                 container.glow:SetVertexColor(1, 0, 0)
                 container.glow:SetAlpha(0.6)
             else
-                container.border:SetColorTexture(0.3, 0.3, 0.3, 0.8)
+                if not msqHistory then
+                    container.border:SetColorTexture(0.3, 0.3, 0.3, 0.8)
+                end
                 container.glow:SetAlpha(0)
             end
 
@@ -217,6 +226,11 @@ end
 
 function Display:ApplyLock()
     local locked = ReWind.db.profile.locked
+    if not locked then
+        self:GetIdleNagFrame()
+        self:GetAssistedFrame()
+        self:GetZenithIcon()
+    end
     local frames = { self.frame, self.zenithIcon, self.assistedFrame, self.idleNagFrame }
     for _, f in ipairs(frames) do
         if f then
