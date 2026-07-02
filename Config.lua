@@ -32,6 +32,7 @@ function ReWind:GetDefaults()
             zenithGlowColor = nil,
             zenithGlowIntensity = 0.9,
             zenithIconPosition = nil,
+            assistedPosition = nil,
             bgAlpha = 0.8,
             borderTexture = "Blizzard Tooltip",
             timelinePosition = nil,

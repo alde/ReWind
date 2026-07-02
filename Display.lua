@@ -8,6 +8,26 @@ local ZENITH_FLASH_DURATION = 3.0
 local ASSISTED_COMBAT_POLL = 0.1
 local SEPARATOR_WIDTH = 6
 
+local function CreateUnlockOverlay(frame, labelText)
+    local overlay = CreateFrame("Frame", nil, frame)
+    overlay:SetAllPoints()
+    overlay:SetFrameLevel(frame:GetFrameLevel() + 20)
+
+    local bg = overlay:CreateTexture(nil, "BACKGROUND")
+    bg:SetAllPoints()
+    bg:SetColorTexture(0, 0, 0, 0.5)
+
+    local label = overlay:CreateFontString(nil, "OVERLAY")
+    label:SetFont("Fonts\\FRIZQT__.TTF", 10, "OUTLINE")
+    label:SetPoint("CENTER")
+    label:SetText(labelText)
+    label:SetTextColor(1, 1, 1)
+
+    overlay:Hide()
+    frame.unlockOverlay = overlay
+    return overlay
+end
+
 function Display:OnEnable()
     self:RegisterMessage("REWIND_HISTORY_UPDATED", "Refresh")
     self:RegisterMessage("REWIND_ZENITH_READY", "OnZenithReady")
@@ -45,6 +65,7 @@ function Display:GetFrame()
 
     f.icons = {}
     self.frame = f
+    CreateUnlockOverlay(f, "Ability Panel")
     ReWind:ApplyAppearance()
     self:ApplyLock()
     self:RestorePosition()
@@ -87,9 +108,6 @@ function Display:LayoutFrame()
         f:SetSize(w, span)
     else
         local h = iconSize + (BORDER_SIZE * 2) + 8
-        if self:ShouldShowAssisted() then
-            span = span + SEPARATOR_WIDTH + iconSize + PADDING
-        end
         f:SetSize(span, h)
     end
 end
@@ -193,11 +211,18 @@ end
 
 function Display:ApplyLock()
     local locked = ReWind.db.profile.locked
-    if self.frame then
-        self.frame:EnableMouse(not locked)
-    end
-    if self.zenithIcon then
-        self.zenithIcon:EnableMouse(not locked)
+    local frames = { self.frame, self.zenithIcon, self.assistedFrame }
+    for _, f in ipairs(frames) do
+        if f then
+            f:EnableMouse(not locked)
+            if f.unlockOverlay then
+                if locked then
+                    f.unlockOverlay:Hide()
+                else
+                    f.unlockOverlay:Show()
+                end
+            end
+        end
     end
 end
 
@@ -239,37 +264,44 @@ function Display:PLAYER_REGEN_ENABLED()
     end
 end
 
--- Assisted Combat (12.0+ Blizzard next-spell suggestion)
+-- Assisted Combat — standalone movable frame
 
 function Display:GetAssistedFrame()
     if self.assistedFrame then return self.assistedFrame end
 
-    local f = self:GetFrame()
     local db = ReWind.db.profile
     local size = db.iconSize
 
-    local af = CreateFrame("Frame", nil, f)
+    local af = CreateFrame("Frame", "ReWindAssistedIcon", UIParent, "BackdropTemplate")
     af:SetSize(size, size)
-
-    local border = af:CreateTexture(nil, "BACKGROUND")
-    border:SetAllPoints()
-    border:SetColorTexture(0.1, 0.5, 0.8, 0.8)
-    af.border = border
+    af:SetBackdrop({
+        bgFile = "Interface\\Tooltips\\UI-Tooltip-Background",
+        edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
+        tile = true, tileSize = 16, edgeSize = 12,
+        insets = { left = 2, right = 2, top = 2, bottom = 2 },
+    })
+    af:SetBackdropColor(0.05, 0.05, 0.1, 0.8)
+    af:SetBackdropBorderColor(0.1, 0.5, 0.8, 0.8)
+    af:SetFrameStrata("MEDIUM")
+    af:SetClampedToScreen(true)
+    af:SetMovable(true)
+    af:EnableMouse(true)
+    af:RegisterForDrag("LeftButton")
+    af:SetScript("OnDragStart", function(self)
+        if not ReWind.db.profile.locked then self:StartMoving() end
+    end)
+    af:SetScript("OnDragStop", function(self)
+        self:StopMovingOrSizing()
+        local point, _, relPoint, x, y = self:GetPoint()
+        ReWind.db.profile.assistedPosition = { point = point, relPoint = relPoint, x = x, y = y }
+    end)
 
     local icon = af:CreateTexture(nil, "ARTWORK")
-    icon:SetPoint("TOPLEFT", BORDER_SIZE, -BORDER_SIZE)
-    icon:SetPoint("BOTTOMRIGHT", -BORDER_SIZE, BORDER_SIZE)
+    icon:SetPoint("TOPLEFT", 3, -3)
+    icon:SetPoint("BOTTOMRIGHT", -3, 3)
     icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
     af.icon = icon
 
-    local label = af:CreateFontString(nil, "OVERLAY")
-    label:SetFont("Fonts\\FRIZQT__.TTF", 8, "OUTLINE")
-    label:SetPoint("BOTTOM", af, "TOP", 0, 1)
-    label:SetText("NEXT")
-    label:SetTextColor(0.4, 0.7, 1.0)
-    af.label = label
-
-    -- Throttled OnUpdate to poll C_AssistedCombat
     af.elapsed = 0
     af:SetScript("OnUpdate", function(self, dt)
         self.elapsed = self.elapsed + dt
@@ -278,8 +310,17 @@ function Display:GetAssistedFrame()
         Display:UpdateAssisted()
     end)
 
+    local pos = db.assistedPosition
+    if pos then
+        af:SetPoint(pos.point, UIParent, pos.relPoint, pos.x, pos.y)
+    else
+        af:SetPoint("CENTER", UIParent, "CENTER", 60, -200)
+    end
+
+    CreateUnlockOverlay(af, "Next Spell")
     af:Hide()
     self.assistedFrame = af
+    self:ApplyLock()
     return af
 end
 
@@ -290,13 +331,8 @@ function Display:RefreshAssisted()
     end
 
     local af = self:GetAssistedFrame()
-    local f = self:GetFrame()
     local db = ReWind.db.profile
-    local size = db.iconSize
-
-    af:SetSize(size, size)
-    af:ClearAllPoints()
-    af:SetPoint("RIGHT", f, "RIGHT", -(BORDER_SIZE + 4), 0)
+    af:SetSize(db.iconSize, db.iconSize)
     af:Show()
     self:UpdateAssisted()
 end
@@ -489,6 +525,7 @@ function Display:GetZenithIcon()
         f:SetPoint("CENTER", UIParent, "CENTER", 0, -150)
     end
 
+    CreateUnlockOverlay(f, "Zenith")
     f:Hide()
     self.zenithIcon = f
     self:ApplyLock()
