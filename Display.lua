@@ -287,6 +287,7 @@ function Display:PLAYER_ENTERING_WORLD()
 end
 
 function Display:PLAYER_REGEN_DISABLED()
+    keybindCacheDirty = true
     self:UpdatePanelVisibility()
     local db = ReWind.db.profile
     if db.zenithCombatOnly and self.zenithIcon and self.zenithIcon:IsShown() then
@@ -405,12 +406,11 @@ local ACTION_BAR_BINDINGS = {
 }
 
 local keybindCache = {}
-local keybindCacheTime = 0
+local keybindCacheDirty = true
 
 local function RebuildKeybindCache()
-    local now = GetTime()
-    if now - keybindCacheTime < 2 then return end
-    keybindCacheTime = now
+    if not keybindCacheDirty then return end
+    keybindCacheDirty = false
     wipe(keybindCache)
 
     for _, bar in ipairs(ACTION_BAR_BINDINGS) do
