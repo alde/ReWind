@@ -3,6 +3,11 @@ local Core = ReWind:NewModule("Core", "AceEvent-3.0")
 
 local TIGER_PALM_ID = 100780
 
+local IDLE_COOLDOWNS = {
+    [322109]  = { name = "Touch of Death" },
+    [392983]  = { name = "Strike of the Windlord" },
+}
+
 local COMBO_STRIKES_SPELLS = {
     [100780]  = true, -- Tiger Palm
     [100784]  = true, -- Blackout Kick
@@ -53,6 +58,7 @@ function Core:OnDisable()
     self:UnregisterAllEvents()
     self.zenithReady = nil
     self.zenithActiveUntil = nil
+    self.idleState = nil
 end
 
 -- Combo Strikes tracking
@@ -108,6 +114,37 @@ end
 
 function Core:SPELL_UPDATE_COOLDOWN()
     self:CheckZenithReady()
+    if ReWind.db.profile.idleCooldownAlert and UnitAffectingCombat("player") then
+        self:CheckIdleCooldowns()
+    end
+end
+
+function Core:CheckIdleCooldowns()
+    local now = GetTime()
+    local threshold = ReWind.db.profile.idleCooldownThreshold
+
+    if not self.idleState then self.idleState = {} end
+
+    for spellId, info in pairs(IDLE_COOLDOWNS) do
+        if IsPlayerSpell(spellId) then
+            local cdInfo = C_Spell.GetSpellCooldown(spellId)
+            local ready = cdInfo and not cdInfo.isActive
+
+            if ready then
+                local state = self.idleState[spellId]
+                if not state then
+                    self.idleState[spellId] = { readySince = now, warned = false }
+                elseif not state.warned and (now - state.readySince) >= threshold then
+                    state.warned = true
+                    ReWind:Debug("Idle cooldown:", info.name, string.format("%.0fs", now - state.readySince))
+                    ReWind:PlayConfigSound("idleCooldownSound")
+                    ReWind:SendMessage("REWIND_COOLDOWN_IDLE", spellId, info.name)
+                end
+            else
+                self.idleState[spellId] = nil
+            end
+        end
+    end
 end
 
 function Core:CheckZenithReady()
@@ -126,8 +163,9 @@ function Core:CheckZenithReady()
         ReWind:SendMessage("REWIND_ZENITH_READY", "Zenith")
     elseif not ready and self.zenithReady then
         self.zenithReady = false
-        self.zenithActiveUntil = GetTime() + 15
-        ReWind:Debug("Zenith pressed, window until", string.format("%.1f", self.zenithActiveUntil))
+        local dur = ReWind.db.profile.zenithDuration
+        self.zenithActiveUntil = GetTime() + dur
+        ReWind:Debug("Zenith pressed, window for", dur .. "s")
         ReWind:SendMessage("REWIND_ZENITH_COOLDOWN", "Zenith")
     elseif not ready then
         self.zenithReady = false
@@ -138,6 +176,7 @@ end
 
 function Core:PLAYER_REGEN_DISABLED()
     ReWind.state.combat = NewCombatStats()
+    self.idleState = nil
 end
 
 function Core:PLAYER_REGEN_ENABLED()

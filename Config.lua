@@ -21,9 +21,14 @@ function ReWind:GetDefaults()
             zenithSoundCustomId = "",
             combatReport = true,
             zenithAlert = true,
+            zenithDuration = 15,
             zenithWasteAlert = true,
             zenithWasteSound = "raid_warning",
             zenithWasteSoundCustomId = "",
+            idleCooldownAlert = true,
+            idleCooldownThreshold = 5,
+            idleCooldownSound = "alarm1",
+            idleCooldownSoundCustomId = "",
             assistedCombat = false,
             timelineAutoShow = false,
             clearOnCombatEnd = false,
@@ -331,6 +336,17 @@ local function GetOptions()
                         get = function() return ReWind.db.profile.zenithAlert end,
                         set = function(_, val) ReWind.db.profile.zenithAlert = val end,
                     },
+                    zenithDuration = {
+                        type = "range",
+                        name = "Zenith Duration",
+                        desc = "Duration of the Zenith window in seconds. Adjust if modified by set bonuses or talents.",
+                        order = 6,
+                        min = 5,
+                        max = 30,
+                        step = 1,
+                        get = function() return ReWind.db.profile.zenithDuration end,
+                        set = function(_, val) ReWind.db.profile.zenithDuration = val end,
+                    },
                     wasteHeader = {
                         type = "header",
                         name = "Zenith Window Warnings",
@@ -492,10 +508,37 @@ local function GetOptions()
                     },
                 },
             },
+            cooldownAlerts = {
+                type = "group",
+                name = "Cooldown Alerts",
+                order = 4,
+                inline = true,
+                args = {
+                    idleCooldownAlert = {
+                        type = "toggle",
+                        name = "Idle Cooldown Warning",
+                        desc = "Warn when Touch of Death or Strike of the Windlord sit available too long during combat.",
+                        order = 1,
+                        get = function() return ReWind.db.profile.idleCooldownAlert end,
+                        set = function(_, val) ReWind.db.profile.idleCooldownAlert = val end,
+                    },
+                    idleCooldownThreshold = {
+                        type = "range",
+                        name = "Delay (seconds)",
+                        desc = "How many seconds a cooldown can sit available before warning.",
+                        order = 2,
+                        min = 2,
+                        max = 15,
+                        step = 1,
+                        get = function() return ReWind.db.profile.idleCooldownThreshold end,
+                        set = function(_, val) ReWind.db.profile.idleCooldownThreshold = val end,
+                    },
+                },
+            },
             general = {
                 type = "group",
                 name = "General",
-                order = 4,
+                order = 5,
                 inline = true,
                 args = {
                     locked = {
@@ -557,6 +600,7 @@ local function GetOptions()
 
     AddSoundPicker(opts.args.zenith.args, "zenith", "zenithSound", 2)
     AddSoundPicker(opts.args.zenith.args, "zenithWaste", "zenithWasteSound", 9)
+    AddSoundPicker(opts.args.cooldownAlerts.args, "idle", "idleCooldownSound", 3)
     AddSoundPicker(opts.args.general.args, "break", "breakSound", 12)
 
     return opts
