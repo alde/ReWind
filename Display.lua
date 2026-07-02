@@ -316,15 +316,19 @@ function Display:GetAssistedFrame()
     local size = ReWind.db.profile.iconSize
     local af = ReWind:CreateMovableFrame("ReWindAssistedIcon", "assistedPosition", {
         width = size, height = size,
-        backdrop = ICON_BACKDROP,
+        backdrop = not MSQ and ICON_BACKDROP or nil,
         backdropColor = { 0.05, 0.05, 0.1, 0.8 },
         borderColor = { 0.1, 0.5, 0.8, 0.8 },
         defaultX = 60, defaultY = -200,
     })
 
     local icon = af:CreateTexture(nil, "ARTWORK")
-    icon:SetPoint("TOPLEFT", 3, -3)
-    icon:SetPoint("BOTTOMRIGHT", -3, 3)
+    if MSQ then
+        icon:SetAllPoints()
+    else
+        icon:SetPoint("TOPLEFT", 3, -3)
+        icon:SetPoint("BOTTOMRIGHT", -3, 3)
+    end
     icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
     af.icon = icon
 
@@ -567,15 +571,19 @@ function Display:GetZenithIcon()
 
     local f = ReWind:CreateMovableFrame("ReWindZenithIcon", "zenithIconPosition", {
         width = size, height = size,
-        backdrop = ICON_BACKDROP,
+        backdrop = not MSQ and ICON_BACKDROP or nil,
         backdropColor = { 0.05, 0.05, 0.05, 0.8 },
         borderColor = { gr, gg, gb, 0.9 },
         defaultY = -150,
     })
 
     local icon = f:CreateTexture(nil, "ARTWORK")
-    icon:SetPoint("TOPLEFT", 3, -3)
-    icon:SetPoint("BOTTOMRIGHT", -3, 3)
+    if MSQ then
+        icon:SetAllPoints()
+    else
+        icon:SetPoint("TOPLEFT", 3, -3)
+        icon:SetPoint("BOTTOMRIGHT", -3, 3)
+    end
     icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
     f.icon = icon
 
