@@ -476,7 +476,6 @@ function Display:UpdateAssisted()
     af.icon:SetDesaturated(false)
 
     local key = GetSpellKeybind(spellId)
-    ReWind:Debug("Next spell:", spellId, spellInfo and spellInfo.name or "?", "key:", key or "none")
     af.keybind:SetText(key or "")
 end
 
