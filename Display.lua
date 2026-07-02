@@ -270,6 +270,12 @@ function Display:GetAssistedFrame()
     icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
     af.icon = icon
 
+    local keybind = af:CreateFontString(nil, "OVERLAY")
+    keybind:SetFont("Fonts\\FRIZQT__.TTF", 10, "OUTLINE")
+    keybind:SetPoint("TOPLEFT", 4, -3)
+    keybind:SetTextColor(1, 1, 1)
+    af.keybind = keybind
+
     af.elapsed = 0
     af:SetScript("OnUpdate", function(self, dt)
         self.elapsed = self.elapsed + dt
@@ -307,6 +313,7 @@ function Display:UpdateAssisted()
     if not spellId then
         af.icon:SetTexture("Interface\\Icons\\INV_Misc_QuestionMark")
         af.icon:SetDesaturated(true)
+        af.keybind:SetText("")
         return
     end
 
@@ -314,6 +321,10 @@ function Display:UpdateAssisted()
     local texture = spellInfo and spellInfo.iconID
     af.icon:SetTexture(texture or "Interface\\Icons\\INV_Misc_QuestionMark")
     af.icon:SetDesaturated(false)
+
+    local spellName = spellInfo and spellInfo.name
+    local key = spellName and GetBindingKey("SPELL " .. spellName)
+    af.keybind:SetText(key or "")
 end
 
 -- Zenith ready flash
