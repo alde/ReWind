@@ -433,11 +433,17 @@ local function RebuildKeybindCache()
             local actionType, id = GetActionInfo(slot)
             ReWind:Debug("Scan:", bindingName, "slot:", slot, "key:", key or "nil",
                 "type:", actionType or "nil", "id:", id or "nil")
-            if key and actionType == "spell" and id then
-                CacheKey(id, key)
-            elseif key and actionType == "macro" and id then
-                local macroSpell = GetMacroSpell(id)
-                if macroSpell then CacheKey(macroSpell, key) end
+            if key and id then
+                if actionType == "spell" then
+                    CacheKey(id, key)
+                elseif actionType == "macro" then
+                    local macroSpell = GetMacroSpell(id)
+                    if macroSpell then
+                        CacheKey(macroSpell, key)
+                    else
+                        CacheKey(id, key)
+                    end
+                end
             end
         end
     end
