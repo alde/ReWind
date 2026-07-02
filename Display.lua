@@ -56,6 +56,8 @@ function Display:OnEnable()
     self:RegisterMessage("REWIND_ZENITH_READY", "OnZenithReady")
     self:RegisterMessage("REWIND_ZENITH_COOLDOWN", "OnZenithCooldown")
     self:RegisterMessage("REWIND_COOLDOWN_IDLE", "OnCooldownIdle")
+    self:RegisterMessage("REWIND_ZENITH_WASTE", "OnZenithWaste")
+    self:RegisterMessage("REWIND_MASTERY_BREAK", "OnMasteryBreak")
     self:RegisterEvent("PLAYER_ENTERING_WORLD")
     self:RegisterEvent("PLAYER_REGEN_DISABLED")
     self:RegisterEvent("PLAYER_REGEN_ENABLED")
@@ -64,11 +66,10 @@ end
 function Display:OnDisable()
     self:UnregisterAllMessages()
     self:UnregisterAllEvents()
-    if self.zenithFrame then self.zenithFrame:Hide() end
     if self.assistedFrame then self.assistedFrame:Hide() end
     self:HideZenithIcon()
     self:HideZenithOverlay()
-    self:HideIdleNag()
+    self:HideWarning()
 end
 
 function Display:GetFrame()
@@ -228,11 +229,11 @@ end
 function Display:ApplyLock()
     local locked = ReWind.db.profile.locked
     if not locked then
-        self:GetIdleNagFrame()
+        self:GetWarningFrame()
         self:GetAssistedFrame()
         self:GetZenithIcon()
     end
-    local frames = { self.frame, self.zenithIcon, self.assistedFrame, self.idleNagFrame }
+    local frames = { self.frame, self.zenithIcon, self.assistedFrame, self.warningFrame }
     for _, f in ipairs(frames) do
         if f then
             f:EnableMouse(not locked)
@@ -259,7 +260,7 @@ function Display:ApplyLock()
                 self.zenithIcon:SetAlpha(0)
             end
         end
-        self:HideIdleNag()
+        self:HideWarning()
     end
 end
 
@@ -298,7 +299,7 @@ end
 
 function Display:PLAYER_REGEN_ENABLED()
     self:UpdatePanelVisibility()
-    self:HideIdleNag()
+    self:HideWarning()
     if ReWind.db.profile.zenithCombatOnly then
         self:SetZenithIconAlpha(0)
     end
@@ -483,60 +484,24 @@ function Display:UpdateAssisted()
     af.keybind:SetText(key or "")
 end
 
--- Zenith ready flash
-
-function Display:GetZenithFrame()
-    if self.zenithFrame then return self.zenithFrame end
-
-    local f = self:GetFrame()
-    local zf = CreateFrame("Frame", nil, f)
-    zf:SetAllPoints(f)
-    zf:SetFrameLevel(f:GetFrameLevel() + 10)
-
-    local r, g, b = ReWind:GetGlowColor()
-
-    local flash = zf:CreateTexture(nil, "OVERLAY")
-    flash:SetAllPoints()
-    flash:SetColorTexture(r, g, b, 0.4)
-    flash:SetBlendMode("ADD")
-    zf.flash = flash
-
-    local label = zf:CreateFontString(nil, "OVERLAY")
-    label:SetFont("Fonts\\FRIZQT__.TTF", 14, "OUTLINE")
-    label:SetPoint("CENTER")
-    label:SetTextColor(r, g, b)
-    zf.label = label
-
-    zf.ag = zf:CreateAnimationGroup()
-    local fadeOut = zf.ag:CreateAnimation("Alpha")
-    fadeOut:SetFromAlpha(1)
-    fadeOut:SetToAlpha(0)
-    fadeOut:SetDuration(ZENITH_FLASH_DURATION)
-    fadeOut:SetSmoothing("OUT")
-    zf.ag:SetScript("OnFinished", function() zf:Hide() end)
-
-    zf:Hide()
-    self.zenithFrame = zf
-    return zf
-end
-
 function Display:OnZenithReady(_, label)
-    local zf = self:GetZenithFrame()
-    local r, g, b = ReWind:GetGlowColor()
-    zf.flash:SetColorTexture(r, g, b, 0.4)
-    zf.label:SetText(label .. " READY")
-    zf.label:SetTextColor(r, g, b)
-    zf:SetAlpha(1)
-    zf:Show()
-    zf.ag:Stop()
-    zf.ag:Play()
-
+    self:ShowWarning(label .. " READY", "info", ZENITH_FLASH_DURATION)
     self:ShowZenithIcon(label)
 end
 
 function Display:OnZenithCooldown()
     self:HideZenithIcon()
     self:ShowZenithOverlay()
+end
+
+function Display:OnZenithWaste()
+    self:ShowWarning("Tiger Palm during Zenith!", "warning", 2)
+end
+
+function Display:OnMasteryBreak(_, spellId)
+    local info = C_Spell.GetSpellInfo(spellId)
+    local name = info and info.name or "?"
+    self:ShowWarning("Mastery break: " .. name, "mistake", 2)
 end
 
 -- Zenith active screen overlay
@@ -582,67 +547,90 @@ function Display:HideZenithOverlay()
     end
 end
 
--- Cooldown idle nag
+-- Text warning frame
 
-function Display:GetIdleNagFrame()
-    if self.idleNagFrame then return self.idleNagFrame end
+local WARNING_COLORS = {
+    info    = { text = { 0.2, 1.0, 0.4 },  border = { 0.2, 0.8, 0.4, 0.6 } },
+    warning = { text = { 1.0, 0.8, 0.2 },  border = { 1.0, 0.7, 0.1, 0.6 } },
+    mistake = { text = { 1.0, 0.3, 0.3 },  border = { 0.9, 0.1, 0.1, 0.6 } },
+}
 
-    local nag = ReWind:CreateMovableFrame("ReWindIdleNag", "idleNagPosition", {
-        width = 220, height = 28,
+function Display:GetWarningFrame()
+    if self.warningFrame then return self.warningFrame end
+
+    local wf = ReWind:CreateMovableFrame("ReWindWarning", "warningPosition", {
+        width = 250, height = 28,
         backdrop = ICON_BACKDROP,
         backdropColor = { 0.05, 0.05, 0.05, 0.7 },
-        borderColor = { 1.0, 0.5, 0.2, 0.6 },
+        borderColor = { 0.5, 0.5, 0.5, 0.6 },
         defaultY = -240,
     })
 
-    local label = nag:CreateFontString(nil, "OVERLAY")
+    local label = wf:CreateFontString(nil, "OVERLAY")
     label:SetFont("Fonts\\FRIZQT__.TTF", 12, "OUTLINE")
     label:SetPoint("CENTER")
-    label:SetTextColor(1.0, 0.5, 0.2)
-    nag.label = label
+    wf.label = label
 
-    local ag = nag:CreateAnimationGroup()
+    local ag = wf:CreateAnimationGroup()
     ag:SetLooping("BOUNCE")
     local pulse = ag:CreateAnimation("Alpha")
     pulse:SetFromAlpha(0.5)
     pulse:SetToAlpha(1.0)
     pulse:SetDuration(0.6)
     pulse:SetSmoothing("IN_OUT")
-    nag.ag = ag
+    wf.ag = ag
 
-    CreateUnlockOverlay(nag, "Cooldown Alert")
-    nag:Hide()
-    self.idleNagFrame = nag
+    CreateUnlockOverlay(wf, "Text Warnings")
+    wf:Hide()
+    self.warningFrame = wf
     self:ApplyLock()
-    return nag
+    return wf
+end
+
+function Display:ShowWarning(text, severity, duration, onUpdate)
+    local wf = self:GetWarningFrame()
+    local colors = WARNING_COLORS[severity] or WARNING_COLORS.warning
+
+    wf.label:SetText(text)
+    wf.label:SetTextColor(unpack(colors.text))
+    wf:SetBackdropBorderColor(unpack(colors.border))
+
+    wf.ag:Stop()
+    wf:SetScript("OnUpdate", onUpdate)
+    wf:Show()
+    wf:SetAlpha(1)
+    wf.ag:Play()
+
+    if duration then
+        C_Timer.After(duration, function()
+            if wf:IsShown() and wf.label:GetText() == text then
+                Display:HideWarning()
+            end
+        end)
+    end
+end
+
+function Display:HideWarning()
+    if not self.warningFrame then return end
+    self.warningFrame.ag:Stop()
+    self.warningFrame:SetScript("OnUpdate", nil)
+    self.warningFrame:SetAlpha(0)
 end
 
 function Display:OnCooldownIdle(_, spellId, spellName)
     if not ReWind.db.profile.idleCooldownNag then return end
 
-    local nag = self:GetIdleNagFrame()
-    nag.trackedSpellId = spellId
-    nag.idleSince = GetTime() - ReWind.db.profile.idleCooldownThreshold
+    local idleSince = GetTime() - ReWind.db.profile.idleCooldownThreshold
 
-    nag:SetScript("OnUpdate", function(self, dt)
-        local elapsed = GetTime() - self.idleSince
-        self.label:SetText(string.format("%s available for %ds", spellName, elapsed))
-
-        local info = C_Spell.GetSpellCooldown(self.trackedSpellId)
+    self:ShowWarning(spellName .. " available", "warning", nil, function()
+        local elapsed = GetTime() - idleSince
+        local wf = Display.warningFrame
+        wf.label:SetText(string.format("%s available for %ds", spellName, elapsed))
+        local info = C_Spell.GetSpellCooldown(spellId)
         if info and info.isActive then
-            Display:HideIdleNag()
+            Display:HideWarning()
         end
     end)
-
-    nag:Show()
-    nag.ag:Play()
-end
-
-function Display:HideIdleNag()
-    if not self.idleNagFrame then return end
-    self.idleNagFrame.ag:Stop()
-    self.idleNagFrame:SetScript("OnUpdate", nil)
-    self.idleNagFrame:Hide()
 end
 
 -- Standalone movable Zenith ready icon

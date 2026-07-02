@@ -79,6 +79,7 @@ function Core:RecordAbility(spellId)
 
     if broke and ReWind.db.profile.soundEnabled then
         ReWind:PlayConfigSound("breakSound")
+        ReWind:SendMessage("REWIND_MASTERY_BREAK", spellId)
     end
 
     if spellId == TIGER_PALM_ID and ReWind.db.profile.zenithWasteAlert then
