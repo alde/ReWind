@@ -9,6 +9,7 @@ function ReWind:GetDefaults()
             locked = false,
             historyCount = 6,
             iconSize = 40,
+            growDirection = "right",
             iconAlpha = 1.0,
             opacityStep = 0.12,
             minOpacity = 0.3,
@@ -176,11 +177,28 @@ local function GetOptions()
                             ReWind:SendMessage("REWIND_HISTORY_UPDATED")
                         end,
                     },
+                    growDirection = {
+                        type = "select",
+                        name = "Growth Direction",
+                        desc = "Direction the history strip grows from newest to oldest.",
+                        order = 12,
+                        values = {
+                            right = "Right",
+                            left = "Left",
+                            up = "Up",
+                            down = "Down",
+                        },
+                        get = function() return ReWind.db.profile.growDirection end,
+                        set = function(_, val)
+                            ReWind.db.profile.growDirection = val
+                            ReWind:SendMessage("REWIND_HISTORY_UPDATED")
+                        end,
+                    },
                     iconSize = {
                         type = "range",
                         name = "Icon Size",
                         desc = "Base size of the most recent ability icon (px).",
-                        order = 12,
+                        order = 13,
 
                         min = 20,
                         max = 64,

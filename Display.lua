@@ -69,20 +69,29 @@ function Display:ShouldShowAssisted()
         and C_AssistedCombat.GetNextCastSpell ~= nil
 end
 
+local function IsVertical(dir)
+    return dir == "up" or dir == "down"
+end
+
 function Display:LayoutFrame()
     local f = self:GetFrame()
     local db = ReWind.db.profile
     local iconSize = db.iconSize
     local visible = math.min(#ReWind.state.history, db.historyCount)
     if visible == 0 then visible = 1 end
-    local totalWidth = (iconSize * visible) + (PADDING * (visible - 1)) + (BORDER_SIZE * 2) + 8
 
-    if self:ShouldShowAssisted() then
-        totalWidth = totalWidth + SEPARATOR_WIDTH + iconSize + PADDING
+    local span = (iconSize * visible) + (PADDING * (visible - 1)) + (BORDER_SIZE * 2) + 8
+
+    if IsVertical(db.growDirection) then
+        local w = iconSize + (BORDER_SIZE * 2) + 8
+        f:SetSize(w, span)
+    else
+        local h = iconSize + (BORDER_SIZE * 2) + 8
+        if self:ShouldShowAssisted() then
+            span = span + SEPARATOR_WIDTH + iconSize + PADDING
+        end
+        f:SetSize(span, h)
     end
-
-    local totalHeight = iconSize + (BORDER_SIZE * 2) + 8
-    f:SetSize(totalWidth, totalHeight)
 end
 
 function Display:GetIcon(index)
@@ -113,6 +122,13 @@ function Display:GetIcon(index)
     return container
 end
 
+local GROW_CONFIG = {
+    right = { anchor = "BOTTOMLEFT", xMul = 1,  yMul = 0 },
+    left  = { anchor = "BOTTOMRIGHT", xMul = -1, yMul = 0 },
+    up    = { anchor = "BOTTOMLEFT", xMul = 0,  yMul = 1 },
+    down  = { anchor = "TOPLEFT",    xMul = 0,  yMul = -1 },
+}
+
 function Display:Refresh()
     local f = self:GetFrame()
     if not f:IsShown() then return end
@@ -121,11 +137,11 @@ function Display:Refresh()
     local history = ReWind.state.history
     local count = db.historyCount
     local baseSize = db.iconSize
+    local grow = GROW_CONFIG[db.growDirection] or GROW_CONFIG.right
 
     self:LayoutFrame()
 
-    -- Most recent is on the right
-    local xOffset = BORDER_SIZE + 4
+    local offset = BORDER_SIZE + 4
     for i = count, 1, -1 do
         local container = self:GetIcon(i)
         local entry = history[i]
@@ -139,16 +155,14 @@ function Display:Refresh()
             container:SetSize(iconPixels, iconPixels)
             container.glow:SetSize(iconPixels * 1.7, iconPixels * 1.7)
             container:ClearAllPoints()
-            container:SetPoint("BOTTOMLEFT", f, "BOTTOMLEFT", xOffset, 4 + BORDER_SIZE)
+            container:SetPoint(grow.anchor, f, grow.anchor,
+                offset * grow.xMul + (grow.xMul == 0 and (BORDER_SIZE + 4) or 0),
+                offset * grow.yMul + (grow.yMul == 0 and (4 + BORDER_SIZE) or 0))
             container:SetAlpha(alpha)
 
             local spellInfo = C_Spell.GetSpellInfo(entry.spellId)
             local texture = spellInfo and spellInfo.iconID
-            if texture then
-                container.icon:SetTexture(texture)
-            else
-                container.icon:SetTexture("Interface\\Icons\\INV_Misc_QuestionMark")
-            end
+            container.icon:SetTexture(texture or "Interface\\Icons\\INV_Misc_QuestionMark")
 
             if entry.broke then
                 container.border:SetColorTexture(0.9, 0.1, 0.1, 1.0)
@@ -160,18 +174,21 @@ function Display:Refresh()
             end
 
             container:Show()
-            xOffset = xOffset + iconPixels + PADDING
+            offset = offset + iconPixels + PADDING
         else
             container:Hide()
         end
     end
 
-    -- Hide extras if history count was reduced
     for i = count + 1, #f.icons do
         f.icons[i]:Hide()
     end
 
-    self:RefreshAssisted()
+    if not IsVertical(db.growDirection) then
+        self:RefreshAssisted()
+    else
+        if self.assistedFrame then self.assistedFrame:Hide() end
+    end
 end
 
 local function IsCombatVisible(combatOnlySetting)
