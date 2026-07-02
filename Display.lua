@@ -466,7 +466,9 @@ function Display:UpdateAssisted()
     af.icon:SetTexture(texture or "Interface\\Icons\\INV_Misc_QuestionMark")
     af.icon:SetDesaturated(false)
 
-    af.keybind:SetText(GetSpellKeybind(spellId) or "")
+    local key = GetSpellKeybind(spellId)
+    ReWind:Debug("Next spell:", spellId, spellInfo and spellInfo.name or "?", "key:", key or "none")
+    af.keybind:SetText(key or "")
 end
 
 -- Zenith ready flash
