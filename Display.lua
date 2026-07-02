@@ -142,7 +142,7 @@ function Display:Refresh()
     self:LayoutFrame()
 
     local offset = BORDER_SIZE + 4
-    for i = count, 1, -1 do
+    for i = 1, count do
         local container = self:GetIcon(i)
         local entry = history[i]
 
@@ -184,11 +184,7 @@ function Display:Refresh()
         f.icons[i]:Hide()
     end
 
-    if not IsVertical(db.growDirection) then
-        self:RefreshAssisted()
-    else
-        if self.assistedFrame then self.assistedFrame:Hide() end
-    end
+    self:RefreshAssisted()
 end
 
 local function IsCombatVisible(combatOnlySetting)
