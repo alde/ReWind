@@ -1,11 +1,35 @@
 local ReWind = _G.ReWind
 local Display = ReWind:NewModule("Display", "AceEvent-3.0")
+local MSQ = LibStub("Masque", true)
 
 local PADDING = 4
 local BORDER_SIZE = 2
 
 local ZENITH_FLASH_DURATION = 3.0
 local ASSISTED_COMBAT_POLL = 0.1
+
+local msqHistory, msqZenith, msqAssisted
+if MSQ then
+    msqHistory = MSQ:Group("ReWind", "Ability History")
+    msqZenith = MSQ:Group("ReWind", "Zenith")
+    msqAssisted = MSQ:Group("ReWind", "Next Spell")
+end
+
+local MASQUE_DISABLED = {
+    Normal = false, Pushed = false, Highlight = false,
+    Checked = false, Flash = false, Disabled = false,
+    AutoCastable = false,
+}
+
+local function MasqueRegister(group, frame, icon, extras)
+    if not group then return end
+    local regions = { Icon = icon }
+    for k, v in pairs(MASQUE_DISABLED) do regions[k] = v end
+    if extras then
+        for k, v in pairs(extras) do regions[k] = v end
+    end
+    group:AddButton(frame, regions)
+end
 
 local function CreateUnlockOverlay(frame, labelText)
     local overlay = CreateFrame("Frame", nil, frame)
@@ -113,6 +137,8 @@ function Display:GetIcon(index)
     glow:SetBlendMode("ADD")
     glow:SetAlpha(0)
     container.glow = glow
+
+    MasqueRegister(msqHistory, container, icon, { Border = glow })
 
     f.icons[index] = container
     return container
@@ -269,6 +295,8 @@ function Display:GetAssistedFrame()
     icon:SetPoint("BOTTOMRIGHT", -3, 3)
     icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
     af.icon = icon
+
+    MasqueRegister(msqAssisted, af, icon, { HotKey = false })
 
     local keybind = af:CreateFontString(nil, "OVERLAY")
     keybind:SetFont("Fonts\\FRIZQT__.TTF", 10, "OUTLINE")
@@ -514,6 +542,8 @@ function Display:GetZenithIcon()
     icon:SetPoint("BOTTOMRIGHT", -3, 3)
     icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
     f.icon = icon
+
+    MasqueRegister(msqZenith, f, icon)
 
     local glow = CreateFrame("Frame", nil, f)
     glow:SetPoint("CENTER")

@@ -7,7 +7,7 @@
 ## SavedVariablesPerCharacter: ReWindDB
 ## Category: Combat
 ## Dependencies
-## OptionalDeps: Ace3
+## OptionalDeps: Ace3, Masque
 
 ## Libs
 Libs\LibStub\LibStub.lua
