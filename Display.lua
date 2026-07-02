@@ -68,7 +68,6 @@ function Display:OnDisable()
     self:UnregisterAllEvents()
     if self.assistedFrame then self.assistedFrame:Hide() end
     self:HideZenithIcon()
-    self:HideZenithOverlay()
     self:HideWarning()
 end
 
@@ -491,7 +490,6 @@ end
 
 function Display:OnZenithCooldown()
     self:HideZenithIcon()
-    self:ShowZenithOverlay()
 end
 
 function Display:OnZenithWaste()
@@ -502,49 +500,6 @@ function Display:OnMasteryBreak(_, spellId)
     local info = C_Spell.GetSpellInfo(spellId)
     local name = info and info.name or "?"
     self:ShowWarning("Mastery break: " .. name, "mistake", 2)
-end
-
--- Zenith active screen overlay
-
-local ZENITH_OVERLAY_ID = 9999901
-local ZENITH_OVERLAY_TEXTURES = {
-    monk_tiger = 623952,
-    white_tiger = 603339,
-    dark_tiger = 603338,
-    generic_arc = 450917,
-    generic_top = 450923,
-}
-
-function Display:ShowZenithOverlay()
-    if not ReWind.db.profile.zenithOverlay then return end
-    if not SpellActivationOverlayFrame then return end
-
-    local texture = ZENITH_OVERLAY_TEXTURES[ReWind.db.profile.zenithOverlayStyle] or 623952
-    local r, g, b = ReWind:GetGlowColor()
-
-    SpellActivationOverlayFrame:ShowAllOverlays(
-        ZENITH_OVERLAY_ID, texture, 9, 1.0,
-        math.floor(r * 255), math.floor(g * 255), math.floor(b * 255)
-    )
-
-    if not self.zenithOverlayTimer then
-        self.zenithOverlayTimer = CreateFrame("Frame")
-    end
-    self.zenithOverlayExpires = GetTime() + ReWind.db.profile.zenithDuration
-    self.zenithOverlayTimer:SetScript("OnUpdate", function()
-        if GetTime() >= self.zenithOverlayExpires then
-            self:HideZenithOverlay()
-        end
-    end)
-end
-
-function Display:HideZenithOverlay()
-    if SpellActivationOverlayFrame then
-        SpellActivationOverlayFrame:HideOverlays(ZENITH_OVERLAY_ID)
-    end
-    if self.zenithOverlayTimer then
-        self.zenithOverlayTimer:SetScript("OnUpdate", nil)
-    end
 end
 
 -- Text warning frame
@@ -558,11 +513,12 @@ local WARNING_COLORS = {
 function Display:GetWarningFrame()
     if self.warningFrame then return self.warningFrame end
 
+    local db = ReWind.db.profile
     local wf = ReWind:CreateMovableFrame("ReWindWarning", "warningPosition", {
         width = 250, height = 28,
         backdrop = ICON_BACKDROP,
-        backdropColor = { 0.05, 0.05, 0.05, 0.7 },
-        borderColor = { 0.5, 0.5, 0.5, 0.6 },
+        backdropColor = { 0.05, 0.05, 0.05, db.warningBgAlpha },
+        borderColor = { 0.5, 0.5, 0.5, db.warningBorderAlpha },
         defaultY = -240,
     })
 
@@ -590,10 +546,12 @@ end
 function Display:ShowWarning(text, severity, duration, onUpdate)
     local wf = self:GetWarningFrame()
     local colors = WARNING_COLORS[severity] or WARNING_COLORS.warning
+    local borderAlpha = ReWind.db.profile.warningBorderAlpha
 
     wf.label:SetText(text)
     wf.label:SetTextColor(unpack(colors.text))
-    wf:SetBackdropBorderColor(unpack(colors.border))
+    local bc = colors.border
+    wf:SetBackdropBorderColor(bc[1], bc[2], bc[3], borderAlpha)
 
     wf.ag:Stop()
     wf:SetScript("OnUpdate", onUpdate)
