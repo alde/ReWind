@@ -39,6 +39,9 @@ function ReWind:OnInitialize()
     self.db = LibStub("AceDB-3.0"):New("ReWindDB", self:GetDefaults(), true)
     self:RegisterChatCommand("rewind", "OnSlashCommand")
     self:RegisterChatCommand("rw", "OnSlashCommand")
+    if not SlashCmdList["RELOADUI"] then
+        self:RegisterChatCommand("rl", function() ReloadUI() end)
+    end
 end
 
 function ReWind:OnEnable()
