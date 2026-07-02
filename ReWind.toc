@@ -23,6 +23,7 @@ Libs\AceGUI-3.0-SharedMediaWidgets\widget.xml
 
 ## Core
 ReWind.lua
+Auras.lua
 Core.lua
 Display.lua
 Timeline.lua

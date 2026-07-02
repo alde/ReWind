@@ -1,6 +1,8 @@
 local ReWind = _G.ReWind
 local Core = ReWind:NewModule("Core", "AceEvent-3.0")
 
+local TIGER_PALM_ID = 100780
+
 local COMBO_STRIKES_SPELLS = {
     [100780]  = true, -- Tiger Palm
     [100784]  = true, -- Blackout Kick
@@ -69,6 +71,14 @@ function Core:RecordAbility(spellId)
 
     if broke and ReWind.db.profile.soundEnabled then
         ReWind:PlayConfigSound("breakSound")
+    end
+
+    if spellId == TIGER_PALM_ID and ReWind.db.profile.zenithWasteAlert then
+        local auras = ReWind:GetModule("Auras", true)
+        if auras and auras:IsActive(ReWind.ZENITH_ID) then
+            ReWind:PlayConfigSound("zenithWasteSound")
+            ReWind:SendMessage("REWIND_ZENITH_WASTE", spellId)
+        end
     end
 
     state.lastSpellId = spellId

@@ -14,6 +14,7 @@ ReWind.state = {
     masteryBroken = false,
     combat = nil,
     keystone = nil,
+    auras = {},
 }
 
 function ReWind:IsWindwalker()
@@ -62,7 +63,7 @@ function ReWind:PLAYER_SPECIALIZATION_CHANGED(_, unit)
 end
 
 function ReWind:EnableModules()
-    for _, name in ipairs({ "Core", "Display", "Timeline" }) do
+    for _, name in ipairs({ "Auras", "Core", "Display", "Timeline" }) do
         local mod = self:GetModule(name, true)
         if mod and not mod:IsEnabled() then
             mod:Enable()
@@ -75,7 +76,7 @@ function ReWind:DisableModules()
     self.state.lastSpellId = nil
     self.state.masteryBroken = false
 
-    for _, name in ipairs({ "Timeline", "Display", "Core" }) do
+    for _, name in ipairs({ "Timeline", "Display", "Core", "Auras" }) do
         local mod = self:GetModule(name, true)
         if mod and mod:IsEnabled() then
             mod:Disable()
