@@ -52,6 +52,7 @@ end
 function Core:OnDisable()
     self:UnregisterAllEvents()
     self.zenithReady = nil
+    self.zenithActiveUntil = nil
 end
 
 -- Combo Strikes tracking
@@ -75,7 +76,8 @@ function Core:RecordAbility(spellId)
 
     if spellId == TIGER_PALM_ID and ReWind.db.profile.zenithWasteAlert then
         local auras = ReWind:GetModule("Auras", true)
-        local zenithActive = auras and auras:IsActive(ReWind.ZENITH_ID)
+        local zenithActive = (auras and auras:IsActive(ReWind.ZENITH_ID))
+            or (self.zenithActiveUntil and GetTime() < self.zenithActiveUntil)
         ReWind:Debug("Tiger Palm cast, Zenith active:", tostring(zenithActive))
         if zenithActive then
             ReWind:PlayConfigSound("zenithWasteSound")
@@ -124,6 +126,8 @@ function Core:CheckZenithReady()
         ReWind:SendMessage("REWIND_ZENITH_READY", "Zenith")
     elseif not ready and self.zenithReady then
         self.zenithReady = false
+        self.zenithActiveUntil = GetTime() + 15
+        ReWind:Debug("Zenith pressed, window until", string.format("%.1f", self.zenithActiveUntil))
         ReWind:SendMessage("REWIND_ZENITH_COOLDOWN", "Zenith")
     elseif not ready then
         self.zenithReady = false
