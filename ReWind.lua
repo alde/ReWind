@@ -8,10 +8,17 @@ local WW_SPEC_ID = 269
 
 ReWind.ZENITH_ID = 1249625
 
+local lastDebugMsg = ""
 function ReWind:Debug(...)
-    if self.db and self.db.profile.debug then
-        self:Print("|cff888888[debug]|r", ...)
+    if not (self.db and self.db.profile.debug) then return end
+    local parts = {}
+    for i = 1, select("#", ...) do
+        parts[i] = tostring(select(i, ...))
     end
+    local msg = table.concat(parts, " ")
+    if msg == lastDebugMsg then return end
+    lastDebugMsg = msg
+    self:Print("|cff888888[debug]|r", msg)
 end
 
 ReWind.state = {

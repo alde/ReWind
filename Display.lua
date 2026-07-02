@@ -426,13 +426,10 @@ local function RebuildKeybindCache()
 
     for _, bar in ipairs(ACTION_BAR_BINDINGS) do
         for i = 1, 12 do
-            local bindingName = bar.prefix .. i
-            local key1, key2 = GetBindingKey(bindingName)
+            local key1, key2 = GetBindingKey(bar.prefix .. i)
             local key = key1 or key2
             local slot = bar.offset + i
             local actionType, id = GetActionInfo(slot)
-            ReWind:Debug("Scan:", bindingName, "slot:", slot, "key:", key or "nil",
-                "type:", actionType or "nil", "id:", id or "nil")
             if key and id then
                 if actionType == "spell" then
                     CacheKey(id, key)
