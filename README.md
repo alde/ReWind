@@ -2,52 +2,35 @@
 
 Combo Strikes mastery tracker for Windwalker Monks. Shows your recent ability history so you never break mastery, and tells you off when you do.
 
-Retail only. Uses `UNIT_SPELLCAST_SUCCEEDED` instead of `COMBAT_LOG_EVENT_UNFILTERED` so it works inside instances under the current addon restrictions.
+Retail (12.0+) only. Uses `UNIT_SPELLCAST_SUCCEEDED` instead of `COMBAT_LOG_EVENT_UNFILTERED` so it works inside instances under the current addon restrictions.
 
 ## Features
 
-### Ability History Strip
-A horizontal row of spell icons showing your last N abilities (configurable, 2–12). The most recent ability is full-size and full opacity; older ones progressively shrink and fade. Mastery breaks get a red border and glow so they're impossible to miss.
-
-### Mastery Break Alerts
-Plays a sound when you cast the same ability twice in a row. Toggleable.
-
-### Combat Reports
-Prints a summary to chat at the end of each fight and M+ run:
-```
-Combat end — 98.5% mastery uptime (65/66 casts, 1 break)
-  Breaks: Tiger Palm x1
-```
-Colour-coded: green for 100%, yellow for 95%+, red below that. Breaks are itemised by spell name. Keystone runs get an aggregate report on completion or reset.
-
-### Zenith Ready Alerts
-Sound and visual flash when Zenith or Zenith Stomp comes off cooldown. Toggleable.
-
-### Encounter Timeline
-Scrollable cast log showing every ability used during a fight with timestamps and mastery break markers. Exportable as CSV — hit the Export button, Ctrl+A, Ctrl+C, and paste it wherever you like. No WarcraftLogs upload needed. Can auto-show after each fight or be opened manually with `/rw timeline`.
-
-### Next Spell (Blizzard)
-Optional display of Blizzard's `C_AssistedCombat` recommended next ability. Off by default — the config toggle is hidden if the API isn't available. Take the suggestions with a healthy dose of scepticism.
+| Feature | Description |
+|---|---|
+| **Ability History Strip** | Horizontal or vertical row of spell icons showing your last N abilities (2-12). Newest icon is full-size; older ones shrink and fade. Mastery breaks get a red border and glow. |
+| **Growth Direction** | Strip can grow left, right, up, or down. |
+| **Mastery Break Alerts** | Configurable sound when you repeat the same ability. |
+| **Combat Reports** | End-of-fight summary with mastery uptime %, cast count, and itemised breaks. Colour-coded green/yellow/red. Keystone runs get aggregate reports. |
+| **Zenith Ready Alert** | Sound and visual flash when Zenith comes off cooldown. Configurable glow style (pulse, proc flipbook, classic ants), colour, and intensity. |
+| **Zenith Ready Icon** | Standalone movable spell icon shown while Zenith is available. Configurable size, opacity, and glow. |
+| **Tiger Palm Warning** | Sound alert when you waste a GCD on Tiger Palm during the Zenith window. |
+| **Cooldown Idle Warnings** | Alert when Touch of Death or Strike of the Windlord sit available too long during combat. Configurable delay threshold. |
+| **Next Spell (Blizzard)** | Standalone movable icon showing Blizzard's `C_AssistedCombat` recommendation. Hidden if the API isn't available. |
+| **Encounter Timeline** | Scrollable cast log with timestamps and break markers. Exportable as CSV. Auto-show after fights or open with `/rw timeline`. |
+| **Aura Scanner** | Tracks player buffs (Zenith, BK!, Dance of Chi-Ji, Tigereye Brew) using the 12.0.5 aura instance API with taint-safe fallbacks. |
+| **Unlock Overlays** | All movable frames show their name when unlocked for easy repositioning. Click-through when locked. |
+| **Panel Appearance** | Configurable background opacity, LSM border texture selection, icon opacity and fade settings. |
+| **Combat-Only Mode** | Separate "only in combat" toggles for the ability panel and zenith icon. Uses alpha instead of Show/Hide to avoid protected frame issues. |
+| **Configurable Sounds** | Curated list of WoW sounds for all alerts, plus custom SoundKit ID input. Test buttons in config. |
 
 ## Tracked Abilities
 
-The spell table matches the 13 active `Combo Strikes:` entries on Wowhead:
+The spell table matches the 13 active Combo Strikes entries:
 
-- Tiger Palm
-- Blackout Kick
-- Rising Sun Kick
-- Rushing Wind Kick
-- Fists of Fury
-- Spinning Crane Kick
-- Whirling Dragon Punch
-- Strike of the Windlord
-- Crackling Jade Lightning
-- Touch of Death
-- Slicing Winds
-- Celestial Conduit
-- Zenith Stomp
+Tiger Palm, Blackout Kick, Rising Sun Kick, Rushing Wind Kick, Fists of Fury, Spinning Crane Kick, Whirling Dragon Punch, Strike of the Windlord, Crackling Jade Lightning, Touch of Death, Slicing Winds, Celestial Conduit, Zenith Stomp.
 
-Zenith itself doesn't trigger mastery but is tracked separately for the cooldown-ready alert.
+Zenith itself doesn't trigger mastery but is tracked separately for cooldown alerts.
 
 ## Slash Commands
 
@@ -56,22 +39,18 @@ Zenith itself doesn't trigger mastery but is tracked separately for the cooldown
 | `/rw` | Toggle display |
 | `/rw config` | Open settings |
 | `/rw timeline` | Show last encounter timeline |
-| `/rw lock` | Lock/unlock frame position |
+| `/rw lock` | Lock/unlock all frames |
 | `/rw reset` | Clear ability history |
-| `/rw test` | Inject test data (including a deliberate mastery break) |
-
-## Configuration
-
-All settings available via `/rw config` or the WoW addon settings panel:
-
-**Display:** Show/hide panel, lock position, history length (2–12), icon size (20–64px), opacity fade rate, minimum opacity.
-
-**Behaviour:** Mastery break sound, combat report, Zenith ready alert, Blizzard next-spell display, auto-show timeline, clear history on combat end.
+| `/rw debug` | Toggle debug logging |
+| `/rw test` | Inject test data |
+| `/rl` | Reload UI (registered if not taken) |
 
 ## Installation
 
-Clone into your WoW addons directory, then run `./download_deps.sh` to pull Ace3 libraries, or install via CurseForge.
+Clone into your WoW addons directory, then run `./download_deps.sh` (or `download_deps.ps1` on Windows) to pull libraries. Both scripts read from `.pkgmeta` so the dependency list is never duplicated. Or install via CurseForge.
 
 ## Dependencies
 
 - Ace3 (AceAddon, AceDB, AceEvent, AceConsole, AceGUI, AceConfig)
+- LibSharedMedia-3.0
+- AceGUI-3.0-SharedMediaWidgets
