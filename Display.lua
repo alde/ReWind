@@ -206,6 +206,8 @@ function Display:Refresh()
         f.icons[i]:Hide()
     end
 
+    if msqHistory then msqHistory:ReSkin() end
+
     self:RefreshAssisted()
 end
 
