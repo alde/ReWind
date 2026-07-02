@@ -177,5 +177,14 @@ function ReWind:ToggleTimeline()
     self:GetModule("Timeline"):Toggle()
 end
 
--- Stubs — implemented by modules
-function ReWind:OpenConfig() end
+function ReWind:OpenConfig()
+    if InCombatLockdown() then
+        self:Print("Cannot open settings during combat.")
+        return
+    end
+    local config = self:GetModule("Config", true)
+    if config and config.optionsFrame then
+        local id = config.optionsFrame.name or config.optionsFrame
+        Settings.OpenToCategory(id)
+    end
+end

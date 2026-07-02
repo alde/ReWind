@@ -82,6 +82,32 @@ function ReWind:PlayConfigSound(settingKey)
     end
 end
 
+local function AddSoundPicker(args, prefix, settingKey, baseOrder)
+    args[prefix .. "Sound"] = {
+        type = "select",
+        name = "Sound",
+        order = baseOrder,
+        values = SOUND_VALUES,
+        get = function() return ReWind.db.profile[settingKey] end,
+        set = function(_, val) ReWind.db.profile[settingKey] = val end,
+    }
+    args[prefix .. "SoundCustom"] = {
+        type = "input",
+        name = "SoundKit ID",
+        desc = "Enter a WoW soundKitID number.",
+        order = baseOrder + 1,
+        hidden = function() return ReWind.db.profile[settingKey] ~= "custom" end,
+        get = function() return ReWind.db.profile[settingKey .. "CustomId"] end,
+        set = function(_, val) ReWind.db.profile[settingKey .. "CustomId"] = val end,
+    }
+    args[prefix .. "SoundTest"] = {
+        type = "execute",
+        name = "Test",
+        order = baseOrder + 2,
+        func = function() ReWind:PlayConfigSound(settingKey) end,
+    }
+end
+
 function ReWind:GetBorderTexture()
     local name = self.db.profile.borderTexture
     if name == "None" then return nil end
@@ -112,7 +138,7 @@ function ReWind:ApplyAppearance()
 end
 
 local function GetOptions()
-    return {
+    local opts = {
         type = "group",
         name = "ReWind",
         args = {
@@ -304,31 +330,6 @@ local function GetOptions()
                         get = function() return ReWind.db.profile.zenithAlert end,
                         set = function(_, val) ReWind.db.profile.zenithAlert = val end,
                     },
-                    zenithSound = {
-                        type = "select",
-                        name = "Sound",
-                        desc = "Sound to play when Zenith comes off cooldown.",
-                        order = 2,
-                        values = SOUND_VALUES,
-                        get = function() return ReWind.db.profile.zenithSound end,
-                        set = function(_, val) ReWind.db.profile.zenithSound = val end,
-                    },
-                    zenithSoundCustom = {
-                        type = "input",
-                        name = "SoundKit ID",
-                        desc = "Enter a WoW soundKitID number.",
-                        order = 5,
-                        hidden = function() return ReWind.db.profile.zenithSound ~= "custom" end,
-                        get = function() return ReWind.db.profile.zenithSoundCustomId end,
-                        set = function(_, val) ReWind.db.profile.zenithSoundCustomId = val end,
-                    },
-                    zenithSoundTest = {
-                        type = "execute",
-                        name = "Test",
-                        desc = "Preview the selected zenith sound.",
-                        order = 4,
-                        func = function() ReWind:PlayConfigSound("zenithSound") end,
-                    },
                     wasteHeader = {
                         type = "header",
                         name = "Zenith Window Warnings",
@@ -341,22 +342,6 @@ local function GetOptions()
                         order = 8,
                         get = function() return ReWind.db.profile.zenithWasteAlert end,
                         set = function(_, val) ReWind.db.profile.zenithWasteAlert = val end,
-                    },
-                    zenithWasteSound = {
-                        type = "select",
-                        name = "Warning Sound",
-                        desc = "Sound to play on wasted Zenith GCD.",
-                        order = 9,
-                        values = SOUND_VALUES,
-                        get = function() return ReWind.db.profile.zenithWasteSound end,
-                        set = function(_, val) ReWind.db.profile.zenithWasteSound = val end,
-                    },
-                    zenithWasteSoundTest = {
-                        type = "execute",
-                        name = "Test",
-                        desc = "Preview the waste warning sound.",
-                        order = 10,
-                        func = function() ReWind:PlayConfigSound("zenithWasteSound") end,
                     },
                     iconHeader = {
                         type = "header",
@@ -535,31 +520,6 @@ local function GetOptions()
                         get = function() return ReWind.db.profile.soundEnabled end,
                         set = function(_, val) ReWind.db.profile.soundEnabled = val end,
                     },
-                    breakSound = {
-                        type = "select",
-                        name = "Sound",
-                        desc = "Sound to play on mastery break.",
-                        order = 12,
-                        values = SOUND_VALUES,
-                        get = function() return ReWind.db.profile.breakSound end,
-                        set = function(_, val) ReWind.db.profile.breakSound = val end,
-                    },
-                    breakSoundCustom = {
-                        type = "input",
-                        name = "SoundKit ID",
-                        desc = "Enter a WoW soundKitID number.",
-                        order = 13,
-                        hidden = function() return ReWind.db.profile.breakSound ~= "custom" end,
-                        get = function() return ReWind.db.profile.breakSoundCustomId end,
-                        set = function(_, val) ReWind.db.profile.breakSoundCustomId = val end,
-                    },
-                    breakSoundTest = {
-                        type = "execute",
-                        name = "Test",
-                        desc = "Preview the selected break sound.",
-                        order = 14,
-                        func = function() ReWind:PlayConfigSound("breakSound") end,
-                    },
                     behaviourHeader = {
                         type = "header",
                         name = "Behaviour",
@@ -593,6 +553,12 @@ local function GetOptions()
             },
         },
     }
+
+    AddSoundPicker(opts.args.zenith.args, "zenith", "zenithSound", 2)
+    AddSoundPicker(opts.args.zenith.args, "zenithWaste", "zenithWasteSound", 9)
+    AddSoundPicker(opts.args.general.args, "break", "breakSound", 12)
+
+    return opts
 end
 
 function Config:OnEnable()
@@ -600,14 +566,3 @@ function Config:OnEnable()
     self.optionsFrame = LibStub("AceConfigDialog-3.0"):AddToBlizOptions("ReWind", "ReWind")
 end
 
-function ReWind:OpenConfig()
-    if InCombatLockdown() then
-        self:Print("Cannot open settings during combat.")
-        return
-    end
-    local config = self:GetModule("Config", true)
-    if config and config.optionsFrame then
-        local id = config.optionsFrame.name or config.optionsFrame
-        Settings.OpenToCategory(id)
-    end
-end
