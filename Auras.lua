@@ -4,7 +4,7 @@ local Auras = ReWind:NewModule("Auras", "AceEvent-3.0")
 local TRACKED_AURAS = {
     [ReWind.ZENITH_ID] = {
         name = "Zenith",
-        baseDuration = 6,
+        baseDuration = 15,
         stacks = false,
     },
     [116768] = {

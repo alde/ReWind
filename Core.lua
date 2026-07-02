@@ -122,7 +122,7 @@ function Core:CheckZenithReady()
         ReWind:SendMessage("REWIND_ZENITH_READY", "Zenith")
     elseif not ready and self.zenithReady then
         self.zenithReady = false
-        self.zenithActiveUntil = GetTime() + 6
+        self.zenithActiveUntil = GetTime() + 15
         ReWind:SendMessage("REWIND_ZENITH_COOLDOWN", "Zenith")
     elseif not ready then
         self.zenithReady = false
