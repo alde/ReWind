@@ -158,7 +158,7 @@ function Core:CheckZenithReady()
 
     if ready and not self.zenithReady then
         self.zenithReady = true
-        if ReWind.db.profile.zenithAlert then
+        if ReWind.db.profile.zenithAlert and UnitAffectingCombat("player") then
             ReWind:PlayConfigSound("zenithSound")
         end
         ReWind:SendMessage("REWIND_ZENITH_READY", "Zenith")
