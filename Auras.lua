@@ -64,9 +64,21 @@ function Auras:ScanPlayer()
     for _, instanceId in ipairs(ids) do
         local ok, err = pcall(function()
             local aura = C_UnitAuras.GetAuraDataByAuraInstanceID("player", instanceId)
-            if not aura or not aura.spellId or issecretvalue(aura.spellId) then return end
+            if not aura then return end
 
-            local trackedId = ResolveSpellId(aura.spellId)
+            local trackedId
+            local spellIdOk, sid = pcall(function() return aura.spellId end)
+            if spellIdOk and sid and not issecretvalue(sid) then
+                trackedId = ResolveSpellId(sid)
+            end
+
+            if not trackedId then
+                local nameOk, auraName = pcall(function() return aura.name end)
+                if nameOk and auraName and not issecretvalue(auraName) and nameToId[auraName] then
+                    trackedId = nameToId[auraName]
+                end
+            end
+
             if not trackedId then return end
 
             local info = TRACKED_AURAS[trackedId]
