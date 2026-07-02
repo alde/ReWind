@@ -335,7 +335,7 @@ function Display:GetAssistedFrame()
     af.icon = icon
 
     local keybind = af:CreateFontString(nil, "OVERLAY")
-    keybind:SetFont("Fonts\\FRIZQT__.TTF", 10, "OUTLINE")
+    keybind:SetFont("Fonts\\FRIZQT__.TTF", math.max(8, math.floor(size * 0.25)), "OUTLINE")
     keybind:SetPoint("TOPLEFT", 4, -3)
     keybind:SetTextColor(1, 1, 1)
     af.keybind = keybind
@@ -365,7 +365,9 @@ function Display:RefreshAssisted()
 
     local af = self:GetAssistedFrame()
     local db = ReWind.db.profile
-    af:SetSize(db.iconSize, db.iconSize)
+    local size = db.iconSize
+    af:SetSize(size, size)
+    af.keybind:SetFont("Fonts\\FRIZQT__.TTF", math.max(8, math.floor(size * 0.25)), "OUTLINE")
     af:Show()
     self:UpdateAssisted()
 end
@@ -384,13 +386,36 @@ local ACTION_BAR_BINDINGS = {
     { prefix = "MULTIACTIONBAR8BUTTON",  offset = 108 },
 }
 
+local function ShortenKey(key)
+    if not key then return nil end
+    key = key:gsub("SHIFT%-", "s-")
+    key = key:gsub("CTRL%-", "c-")
+    key = key:gsub("ALT%-", "a-")
+    key = key:gsub("NUMPAD", "N")
+    key = key:gsub("BUTTON", "M")
+    key = key:gsub("MOUSEWHEELUP", "WU")
+    key = key:gsub("MOUSEWHEELDOWN", "WD")
+    return key
+end
+
 local keybindCache = {}
+local keybindNameCache = {}
 local keybindCacheDirty = true
+
+local function CacheKey(id, key)
+    if not id or keybindCache[id] then return end
+    keybindCache[id] = ShortenKey(key)
+    local info = C_Spell.GetSpellInfo(id)
+    if info and info.name and not keybindNameCache[info.name] then
+        keybindNameCache[info.name] = keybindCache[id]
+    end
+end
 
 local function RebuildKeybindCache()
     if not keybindCacheDirty then return end
     keybindCacheDirty = false
     wipe(keybindCache)
+    wipe(keybindNameCache)
 
     for _, bar in ipairs(ACTION_BAR_BINDINGS) do
         for i = 1, 12 do
@@ -399,14 +424,10 @@ local function RebuildKeybindCache()
                 local slot = bar.offset + i
                 local actionType, id = GetActionInfo(slot)
                 if actionType == "spell" and id then
-                    if not keybindCache[id] then
-                        keybindCache[id] = key
-                    end
+                    CacheKey(id, key)
                 elseif actionType == "macro" then
                     local macroSpell = GetMacroSpell(id)
-                    if macroSpell and not keybindCache[macroSpell] then
-                        keybindCache[macroSpell] = key
-                    end
+                    if macroSpell then CacheKey(macroSpell, key) end
                 end
             end
         end
@@ -415,7 +436,10 @@ end
 
 local function GetSpellKeybind(spellId)
     RebuildKeybindCache()
-    return keybindCache[spellId]
+    if keybindCache[spellId] then return keybindCache[spellId] end
+    local info = C_Spell.GetSpellInfo(spellId)
+    if info and info.name then return keybindNameCache[info.name] end
+    return nil
 end
 
 function Display:UpdateAssisted()
