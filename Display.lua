@@ -403,11 +403,17 @@ local keybindNameCache = {}
 local keybindCacheDirty = true
 
 local function CacheKey(id, key)
-    if not id or keybindCache[id] then return end
-    keybindCache[id] = ShortenKey(key)
+    if not id then return end
+    local short = ShortenKey(key)
+    local existing = keybindCache[id]
+    if existing and #existing <= #short then return end
+    keybindCache[id] = short
     local info = C_Spell.GetSpellInfo(id)
-    if info and info.name and not keybindNameCache[info.name] then
-        keybindNameCache[info.name] = keybindCache[id]
+    if info and info.name then
+        local existingName = keybindNameCache[info.name]
+        if not existingName or #short < #existingName then
+            keybindNameCache[info.name] = short
+        end
     end
 end
 
