@@ -34,7 +34,7 @@ end
 local function CreateUnlockOverlay(frame, labelText)
     local overlay = CreateFrame("Frame", nil, frame)
     overlay:SetAllPoints()
-    overlay:SetFrameLevel(frame:GetFrameLevel() + 20)
+    overlay:SetFrameStrata("TOOLTIP")
 
     local bg = overlay:CreateTexture(nil, "BACKGROUND")
     bg:SetAllPoints()
@@ -225,10 +225,26 @@ function Display:ApplyLock()
                 if locked then
                     f.unlockOverlay:Hide()
                 else
+                    f:Show()
+                    f:SetAlpha(1)
                     f.unlockOverlay:Show()
                 end
             end
         end
+    end
+
+    if locked then
+        self:UpdatePanelVisibility()
+        self:RefreshAssisted()
+        if self.zenithIcon then
+            local core = ReWind:GetModule("Core", true)
+            if core and core.zenithReady then
+                self.zenithIcon:SetAlpha(ReWind.db.profile.zenithIconAlpha)
+            else
+                self.zenithIcon:SetAlpha(0)
+            end
+        end
+        self:HideIdleNag()
     end
 end
 
