@@ -88,6 +88,44 @@ function ReWind:DisableModules()
     end
 end
 
+function ReWind:CreateMovableFrame(name, positionKey, defaults)
+    local f = CreateFrame("Frame", name, UIParent, "BackdropTemplate")
+    f:SetSize(defaults.width or 48, defaults.height or 48)
+    if defaults.backdrop then
+        f:SetBackdrop(defaults.backdrop)
+        if defaults.backdropColor then
+            f:SetBackdropColor(unpack(defaults.backdropColor))
+        end
+        if defaults.borderColor then
+            f:SetBackdropBorderColor(unpack(defaults.borderColor))
+        end
+    end
+    f:SetFrameStrata(defaults.strata or "MEDIUM")
+    f:SetClampedToScreen(true)
+    f:SetMovable(true)
+    f:EnableMouse(true)
+    f:RegisterForDrag("LeftButton")
+    f:SetScript("OnDragStart", function(self)
+        if not ReWind.db.profile.locked then self:StartMoving() end
+    end)
+    f:SetScript("OnDragStop", function(self)
+        self:StopMovingOrSizing()
+        local point, _, relPoint, x, y = self:GetPoint()
+        ReWind.db.profile[positionKey] = { point = point, relPoint = relPoint, x = x, y = y }
+    end)
+
+    local pos = ReWind.db.profile[positionKey]
+    if pos then
+        f:SetPoint(pos.point, UIParent, pos.relPoint, pos.x, pos.y)
+    else
+        f:SetPoint(defaults.defaultPoint or "CENTER", UIParent,
+            defaults.defaultRelPoint or "CENTER",
+            defaults.defaultX or 0, defaults.defaultY or 0)
+    end
+
+    return f
+end
+
 function ReWind:ToggleDisplay()
     self:GetModule("Display"):Toggle()
 end
@@ -134,6 +172,9 @@ function ReWind:OnSlashCommand(input)
     end
 end
 
+function ReWind:ToggleTimeline()
+    self:GetModule("Timeline"):Toggle()
+end
+
 -- Stubs — implemented by modules
 function ReWind:OpenConfig() end
-function ReWind:ToggleTimeline() end

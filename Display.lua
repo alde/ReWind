@@ -6,7 +6,6 @@ local BORDER_SIZE = 2
 
 local ZENITH_FLASH_DURATION = 3.0
 local ASSISTED_COMBAT_POLL = 0.1
-local SEPARATOR_WIDTH = 6
 
 local function CreateUnlockOverlay(frame, labelText)
     local overlay = CreateFrame("Frame", nil, frame)
@@ -48,40 +47,17 @@ end
 function Display:GetFrame()
     if self.frame then return self.frame end
 
-    local f = CreateFrame("Frame", "ReWindPanel", UIParent, "BackdropTemplate")
-    f:SetFrameStrata("MEDIUM")
-    f:SetClampedToScreen(true)
-    f:SetMovable(true)
-    f:EnableMouse(true)
-    f:RegisterForDrag("LeftButton")
-    f:SetScript("OnDragStart", function(self)
-        if not ReWind.db.profile.locked then self:StartMoving() end
-    end)
-    f:SetScript("OnDragStop", function(self)
-        self:StopMovingOrSizing()
-        local point, _, relPoint, x, y = self:GetPoint()
-        ReWind.db.profile.position = { point = point, relPoint = relPoint, x = x, y = y }
-    end)
-
+    local f = ReWind:CreateMovableFrame("ReWindPanel", "position", {
+        defaultY = -200,
+    })
     f.icons = {}
     self.frame = f
     CreateUnlockOverlay(f, "Ability Panel")
     ReWind:ApplyAppearance()
     self:ApplyLock()
-    self:RestorePosition()
     self:LayoutFrame()
 
     return f
-end
-
-function Display:RestorePosition()
-    local pos = ReWind.db.profile.position
-    if pos then
-        self.frame:ClearAllPoints()
-        self.frame:SetPoint(pos.point, UIParent, pos.relPoint, pos.x, pos.y)
-    else
-        self.frame:SetPoint("CENTER", UIParent, "CENTER", 0, -200)
-    end
 end
 
 function Display:ShouldShowAssisted()
@@ -266,35 +242,24 @@ end
 
 -- Assisted Combat — standalone movable frame
 
+local ICON_BACKDROP = {
+    bgFile = "Interface\\Tooltips\\UI-Tooltip-Background",
+    edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
+    tile = true, tileSize = 16, edgeSize = 12,
+    insets = { left = 2, right = 2, top = 2, bottom = 2 },
+}
+
 function Display:GetAssistedFrame()
     if self.assistedFrame then return self.assistedFrame end
 
-    local db = ReWind.db.profile
-    local size = db.iconSize
-
-    local af = CreateFrame("Frame", "ReWindAssistedIcon", UIParent, "BackdropTemplate")
-    af:SetSize(size, size)
-    af:SetBackdrop({
-        bgFile = "Interface\\Tooltips\\UI-Tooltip-Background",
-        edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
-        tile = true, tileSize = 16, edgeSize = 12,
-        insets = { left = 2, right = 2, top = 2, bottom = 2 },
+    local size = ReWind.db.profile.iconSize
+    local af = ReWind:CreateMovableFrame("ReWindAssistedIcon", "assistedPosition", {
+        width = size, height = size,
+        backdrop = ICON_BACKDROP,
+        backdropColor = { 0.05, 0.05, 0.1, 0.8 },
+        borderColor = { 0.1, 0.5, 0.8, 0.8 },
+        defaultX = 60, defaultY = -200,
     })
-    af:SetBackdropColor(0.05, 0.05, 0.1, 0.8)
-    af:SetBackdropBorderColor(0.1, 0.5, 0.8, 0.8)
-    af:SetFrameStrata("MEDIUM")
-    af:SetClampedToScreen(true)
-    af:SetMovable(true)
-    af:EnableMouse(true)
-    af:RegisterForDrag("LeftButton")
-    af:SetScript("OnDragStart", function(self)
-        if not ReWind.db.profile.locked then self:StartMoving() end
-    end)
-    af:SetScript("OnDragStop", function(self)
-        self:StopMovingOrSizing()
-        local point, _, relPoint, x, y = self:GetPoint()
-        ReWind.db.profile.assistedPosition = { point = point, relPoint = relPoint, x = x, y = y }
-    end)
 
     local icon = af:CreateTexture(nil, "ARTWORK")
     icon:SetPoint("TOPLEFT", 3, -3)
@@ -309,13 +274,6 @@ function Display:GetAssistedFrame()
         self.elapsed = 0
         Display:UpdateAssisted()
     end)
-
-    local pos = db.assistedPosition
-    if pos then
-        af:SetPoint(pos.point, UIParent, pos.relPoint, pos.x, pos.y)
-    else
-        af:SetPoint("CENTER", UIParent, "CENTER", 60, -200)
-    end
 
     CreateUnlockOverlay(af, "Next Spell")
     af:Hide()
@@ -365,16 +323,18 @@ function Display:GetZenithFrame()
     zf:SetAllPoints(f)
     zf:SetFrameLevel(f:GetFrameLevel() + 10)
 
+    local r, g, b = ReWind:GetGlowColor()
+
     local flash = zf:CreateTexture(nil, "OVERLAY")
     flash:SetAllPoints()
-    flash:SetColorTexture(0.0, 0.8, 0.4, 0.4)
+    flash:SetColorTexture(r, g, b, 0.4)
     flash:SetBlendMode("ADD")
     zf.flash = flash
 
     local label = zf:CreateFontString(nil, "OVERLAY")
     label:SetFont("Fonts\\FRIZQT__.TTF", 14, "OUTLINE")
     label:SetPoint("CENTER")
-    label:SetTextColor(0.2, 1.0, 0.4)
+    label:SetTextColor(r, g, b)
     zf.label = label
 
     zf.ag = zf:CreateAnimationGroup()
@@ -392,7 +352,10 @@ end
 
 function Display:OnZenithReady(_, label)
     local zf = self:GetZenithFrame()
+    local r, g, b = ReWind:GetGlowColor()
+    zf.flash:SetColorTexture(r, g, b, 0.4)
     zf.label:SetText(label .. " READY")
+    zf.label:SetTextColor(r, g, b)
     zf:SetAlpha(1)
     zf:Show()
     zf.ag:Stop()
@@ -406,10 +369,6 @@ function Display:OnZenithCooldown()
 end
 
 -- Standalone movable Zenith ready icon
-
-local function GetGlowColor()
-    return ReWind:GetGlowColor()
-end
 
 local FLIPBOOK_STYLES = {
     proc = {
@@ -467,31 +426,15 @@ function Display:GetZenithIcon()
 
     local db = ReWind.db.profile
     local size = db.zenithIconSize
+    local gr, gg, gb = ReWind:GetGlowColor()
 
-    local f = CreateFrame("Frame", "ReWindZenithIcon", UIParent, "BackdropTemplate")
-    f:SetSize(size, size)
-    f:SetBackdrop({
-        bgFile = "Interface\\Tooltips\\UI-Tooltip-Background",
-        edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
-        tile = true, tileSize = 16, edgeSize = 12,
-        insets = { left = 2, right = 2, top = 2, bottom = 2 },
+    local f = ReWind:CreateMovableFrame("ReWindZenithIcon", "zenithIconPosition", {
+        width = size, height = size,
+        backdrop = ICON_BACKDROP,
+        backdropColor = { 0.05, 0.05, 0.05, 0.8 },
+        borderColor = { gr, gg, gb, 0.9 },
+        defaultY = -150,
     })
-    f:SetBackdropColor(0.05, 0.05, 0.05, 0.8)
-    local gr, gg, gb = GetGlowColor()
-    f:SetBackdropBorderColor(gr, gg, gb, 0.9)
-    f:SetFrameStrata("MEDIUM")
-    f:SetClampedToScreen(true)
-    f:SetMovable(true)
-    f:EnableMouse(true)
-    f:RegisterForDrag("LeftButton")
-    f:SetScript("OnDragStart", function(self)
-        if not ReWind.db.profile.locked then self:StartMoving() end
-    end)
-    f:SetScript("OnDragStop", function(self)
-        self:StopMovingOrSizing()
-        local point, _, relPoint, x, y = self:GetPoint()
-        ReWind.db.profile.zenithIconPosition = { point = point, relPoint = relPoint, x = x, y = y }
-    end)
 
     local icon = f:CreateTexture(nil, "ARTWORK")
     icon:SetPoint("TOPLEFT", 3, -3)
@@ -546,7 +489,7 @@ function Display:ApplyZenithGlow()
     local f = self.zenithIcon
     local db = ReWind.db.profile
     local style = db.zenithGlowStyle
-    local r, g, b = GetGlowColor()
+    local r, g, b = ReWind:GetGlowColor()
     local intensity = db.zenithGlowIntensity
     local size = db.zenithIconSize
 

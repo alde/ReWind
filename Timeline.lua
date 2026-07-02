@@ -329,8 +329,3 @@ function Timeline:FormatExport(enc)
     return table.concat(lines, "\n")
 end
 
--- Wire stubs
-
-function ReWind:ToggleTimeline()
-    self:GetModule("Timeline"):Toggle()
-end
