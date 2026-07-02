@@ -145,19 +145,6 @@ local function GetOptions()
                             ReWind:GetModule("Display"):UpdatePanelVisibility()
                         end,
                     },
-                    assistedCombat = {
-                        type = "toggle",
-                        name = "Next Spell (Blizzard)",
-                        desc = "Show Blizzard's recommended next ability. Take with a grain of salt.",
-                        order = 3,
-
-                        hidden = function() return C_AssistedCombat == nil end,
-                        get = function() return ReWind.db.profile.assistedCombat end,
-                        set = function(_, val)
-                            ReWind.db.profile.assistedCombat = val
-                            ReWind:SendMessage("REWIND_HISTORY_UPDATED")
-                        end,
-                    },
                     iconsHeader = {
                         type = "header",
                         name = "Icons",
@@ -467,10 +454,30 @@ local function GetOptions()
                     },
                 },
             },
+            nextSpell = {
+                type = "group",
+                name = "Next Spell",
+                order = 3,
+                inline = true,
+                hidden = function() return C_AssistedCombat == nil end,
+                args = {
+                    assistedCombat = {
+                        type = "toggle",
+                        name = "Show Next Spell",
+                        desc = "Show Blizzard's recommended next ability. Take with a grain of salt.",
+                        order = 1,
+                        get = function() return ReWind.db.profile.assistedCombat end,
+                        set = function(_, val)
+                            ReWind.db.profile.assistedCombat = val
+                            ReWind:SendMessage("REWIND_HISTORY_UPDATED")
+                        end,
+                    },
+                },
+            },
             general = {
                 type = "group",
                 name = "General",
-                order = 3,
+                order = 4,
                 inline = true,
                 args = {
                     locked = {
