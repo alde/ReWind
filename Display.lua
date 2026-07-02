@@ -438,6 +438,11 @@ local function RebuildKeybindCache()
             end
         end
     end
+
+    for id, key in pairs(keybindCache) do
+        local info = C_Spell.GetSpellInfo(id)
+        ReWind:Debug("Keybind:", id, info and info.name or "?", "->", key)
+    end
 end
 
 local function GetSpellKeybind(spellId)
