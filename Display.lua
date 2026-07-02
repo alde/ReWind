@@ -298,13 +298,13 @@ function Display:GetAssistedFrame()
     icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
     af.icon = icon
 
-    MasqueRegister(msqAssisted, af, icon, { HotKey = false })
-
     local keybind = af:CreateFontString(nil, "OVERLAY")
     keybind:SetFont("Fonts\\FRIZQT__.TTF", 10, "OUTLINE")
     keybind:SetPoint("TOPLEFT", 4, -3)
     keybind:SetTextColor(1, 1, 1)
     af.keybind = keybind
+
+    MasqueRegister(msqAssisted, af, icon, { HotKey = keybind })
 
     af.elapsed = 0
     af:SetScript("OnUpdate", function(self, dt)
