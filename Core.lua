@@ -129,7 +129,8 @@ function Core:CheckIdleCooldowns()
     for spellId, info in pairs(IDLE_COOLDOWNS) do
         if IsPlayerSpell(spellId) then
             local cdInfo = C_Spell.GetSpellCooldown(spellId)
-            local ready = cdInfo and not cdInfo.isActive
+            local usable = C_Spell.IsSpellUsable(spellId)
+            local ready = cdInfo and not cdInfo.isActive and usable
 
             if ready then
                 local state = self.idleState[spellId]
