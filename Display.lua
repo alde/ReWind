@@ -370,27 +370,6 @@ function Display:RefreshAssisted()
     self:UpdateAssisted()
 end
 
-function Display:UpdateAssisted()
-    local af = self.assistedFrame
-    if not af or not af:IsShown() then return end
-    if not C_AssistedCombat then return end
-
-    local spellId = C_AssistedCombat.GetNextCastSpell()
-    if not spellId then
-        af.icon:SetTexture("Interface\\Icons\\INV_Misc_QuestionMark")
-        af.icon:SetDesaturated(true)
-        af.keybind:SetText("")
-        return
-    end
-
-    local spellInfo = C_Spell.GetSpellInfo(spellId)
-    local texture = spellInfo and spellInfo.iconID
-    af.icon:SetTexture(texture or "Interface\\Icons\\INV_Misc_QuestionMark")
-    af.icon:SetDesaturated(false)
-
-    af.keybind:SetText(GetSpellKeybind(spellId) or "")
-end
-
 -- Keybinding lookup
 
 local ACTION_BAR_BINDINGS = {
@@ -437,6 +416,27 @@ end
 local function GetSpellKeybind(spellId)
     RebuildKeybindCache()
     return keybindCache[spellId]
+end
+
+function Display:UpdateAssisted()
+    local af = self.assistedFrame
+    if not af or not af:IsShown() then return end
+    if not C_AssistedCombat then return end
+
+    local spellId = C_AssistedCombat.GetNextCastSpell()
+    if not spellId then
+        af.icon:SetTexture("Interface\\Icons\\INV_Misc_QuestionMark")
+        af.icon:SetDesaturated(true)
+        af.keybind:SetText("")
+        return
+    end
+
+    local spellInfo = C_Spell.GetSpellInfo(spellId)
+    local texture = spellInfo and spellInfo.iconID
+    af.icon:SetTexture(texture or "Interface\\Icons\\INV_Misc_QuestionMark")
+    af.icon:SetDesaturated(false)
+
+    af.keybind:SetText(GetSpellKeybind(spellId) or "")
 end
 
 -- Zenith ready flash
