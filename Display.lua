@@ -387,9 +387,56 @@ function Display:UpdateAssisted()
     af.icon:SetTexture(texture or "Interface\\Icons\\INV_Misc_QuestionMark")
     af.icon:SetDesaturated(false)
 
-    local spellName = spellInfo and spellInfo.name
-    local key = spellName and GetBindingKey("SPELL " .. spellName)
-    af.keybind:SetText(key or "")
+    af.keybind:SetText(GetSpellKeybind(spellId) or "")
+end
+
+-- Keybinding lookup
+
+local ACTION_BAR_BINDINGS = {
+    { prefix = "ACTIONBUTTON",           offset = 0 },
+    { prefix = "MULTIACTIONBAR1BUTTON",  offset = 60 },
+    { prefix = "MULTIACTIONBAR2BUTTON",  offset = 48 },
+    { prefix = "MULTIACTIONBAR3BUTTON",  offset = 24 },
+    { prefix = "MULTIACTIONBAR4BUTTON",  offset = 36 },
+    { prefix = "MULTIACTIONBAR5BUTTON",  offset = 72 },
+    { prefix = "MULTIACTIONBAR6BUTTON",  offset = 84 },
+    { prefix = "MULTIACTIONBAR7BUTTON",  offset = 96 },
+    { prefix = "MULTIACTIONBAR8BUTTON",  offset = 108 },
+}
+
+local keybindCache = {}
+local keybindCacheTime = 0
+
+local function RebuildKeybindCache()
+    local now = GetTime()
+    if now - keybindCacheTime < 2 then return end
+    keybindCacheTime = now
+    wipe(keybindCache)
+
+    for _, bar in ipairs(ACTION_BAR_BINDINGS) do
+        for i = 1, 12 do
+            local key = GetBindingKey(bar.prefix .. i)
+            if key then
+                local slot = bar.offset + i
+                local actionType, id = GetActionInfo(slot)
+                if actionType == "spell" and id then
+                    if not keybindCache[id] then
+                        keybindCache[id] = key
+                    end
+                elseif actionType == "macro" then
+                    local macroSpell = GetMacroSpell(id)
+                    if macroSpell and not keybindCache[macroSpell] then
+                        keybindCache[macroSpell] = key
+                    end
+                end
+            end
+        end
+    end
+end
+
+local function GetSpellKeybind(spellId)
+    RebuildKeybindCache()
+    return keybindCache[spellId]
 end
 
 -- Zenith ready flash
