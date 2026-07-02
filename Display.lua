@@ -31,6 +31,7 @@ function Display:OnEnable()
     self:RegisterMessage("REWIND_HISTORY_UPDATED", "Refresh")
     self:RegisterMessage("REWIND_ZENITH_READY", "OnZenithReady")
     self:RegisterMessage("REWIND_ZENITH_COOLDOWN", "OnZenithCooldown")
+    self:RegisterMessage("REWIND_COOLDOWN_IDLE", "OnCooldownIdle")
     self:RegisterEvent("PLAYER_ENTERING_WORLD")
     self:RegisterEvent("PLAYER_REGEN_DISABLED")
     self:RegisterEvent("PLAYER_REGEN_ENABLED")
@@ -42,6 +43,7 @@ function Display:OnDisable()
     if self.zenithFrame then self.zenithFrame:Hide() end
     if self.assistedFrame then self.assistedFrame:Hide() end
     self:HideZenithIcon()
+    self:HideIdleNag()
 end
 
 function Display:GetFrame()
@@ -235,6 +237,7 @@ end
 
 function Display:PLAYER_REGEN_ENABLED()
     self:UpdatePanelVisibility()
+    self:HideIdleNag()
     if ReWind.db.profile.zenithCombatOnly then
         self:SetZenithIconAlpha(0)
     end
@@ -366,6 +369,65 @@ end
 
 function Display:OnZenithCooldown()
     self:HideZenithIcon()
+end
+
+-- Cooldown idle nag
+
+function Display:GetIdleNagFrame()
+    if self.idleNagFrame then return self.idleNagFrame end
+
+    local f = self:GetFrame()
+    local nag = CreateFrame("Frame", nil, f)
+    nag:SetPoint("TOP", f, "BOTTOM", 0, -2)
+    nag:SetSize(200, 20)
+    nag:SetFrameLevel(f:GetFrameLevel() + 5)
+
+    local label = nag:CreateFontString(nil, "OVERLAY")
+    label:SetFont("Fonts\\FRIZQT__.TTF", 11, "OUTLINE")
+    label:SetPoint("CENTER")
+    label:SetTextColor(1.0, 0.5, 0.2)
+    nag.label = label
+
+    local ag = nag:CreateAnimationGroup()
+    ag:SetLooping("BOUNCE")
+    local pulse = ag:CreateAnimation("Alpha")
+    pulse:SetFromAlpha(0.5)
+    pulse:SetToAlpha(1.0)
+    pulse:SetDuration(0.6)
+    pulse:SetSmoothing("IN_OUT")
+    nag.ag = ag
+
+    nag:Hide()
+    self.idleNagFrame = nag
+    return nag
+end
+
+function Display:OnCooldownIdle(_, spellId, spellName)
+    if not ReWind.db.profile.idleCooldownNag then return end
+
+    local nag = self:GetIdleNagFrame()
+    nag.trackedSpellId = spellId
+    nag.idleSince = GetTime() - ReWind.db.profile.idleCooldownThreshold
+
+    nag:SetScript("OnUpdate", function(self, dt)
+        local elapsed = GetTime() - self.idleSince
+        self.label:SetText(string.format("%s available for %ds", spellName, elapsed))
+
+        local info = C_Spell.GetSpellCooldown(self.trackedSpellId)
+        if info and info.isActive then
+            Display:HideIdleNag()
+        end
+    end)
+
+    nag:Show()
+    nag.ag:Play()
+end
+
+function Display:HideIdleNag()
+    if not self.idleNagFrame then return end
+    self.idleNagFrame.ag:Stop()
+    self.idleNagFrame:SetScript("OnUpdate", nil)
+    self.idleNagFrame:Hide()
 end
 
 -- Standalone movable Zenith ready icon

@@ -6,6 +6,7 @@ local TIGER_PALM_ID = 100780
 local IDLE_COOLDOWNS = {
     [322109]  = { name = "Touch of Death" },
     [392983]  = { name = "Strike of the Windlord" },
+    [152175]  = { name = "Whirling Dragon Punch" },
 }
 
 local COMBO_STRIKES_SPELLS = {
