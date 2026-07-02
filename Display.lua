@@ -217,7 +217,7 @@ end
 
 function Display:ApplyLock()
     local locked = ReWind.db.profile.locked
-    local frames = { self.frame, self.zenithIcon, self.assistedFrame }
+    local frames = { self.frame, self.zenithIcon, self.assistedFrame, self.idleNagFrame }
     for _, f in ipairs(frames) do
         if f then
             f:EnableMouse(not locked)
@@ -417,14 +417,16 @@ end
 function Display:GetIdleNagFrame()
     if self.idleNagFrame then return self.idleNagFrame end
 
-    local f = self:GetFrame()
-    local nag = CreateFrame("Frame", nil, f)
-    nag:SetPoint("TOP", f, "BOTTOM", 0, -2)
-    nag:SetSize(200, 20)
-    nag:SetFrameLevel(f:GetFrameLevel() + 5)
+    local nag = ReWind:CreateMovableFrame("ReWindIdleNag", "idleNagPosition", {
+        width = 220, height = 28,
+        backdrop = ICON_BACKDROP,
+        backdropColor = { 0.05, 0.05, 0.05, 0.7 },
+        borderColor = { 1.0, 0.5, 0.2, 0.6 },
+        defaultY = -240,
+    })
 
     local label = nag:CreateFontString(nil, "OVERLAY")
-    label:SetFont("Fonts\\FRIZQT__.TTF", 11, "OUTLINE")
+    label:SetFont("Fonts\\FRIZQT__.TTF", 12, "OUTLINE")
     label:SetPoint("CENTER")
     label:SetTextColor(1.0, 0.5, 0.2)
     nag.label = label
@@ -438,8 +440,10 @@ function Display:GetIdleNagFrame()
     pulse:SetSmoothing("IN_OUT")
     nag.ag = ag
 
+    CreateUnlockOverlay(nag, "Cooldown Alert")
     nag:Hide()
     self.idleNagFrame = nag
+    self:ApplyLock()
     return nag
 end
 

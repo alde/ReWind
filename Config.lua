@@ -29,6 +29,7 @@ function ReWind:GetDefaults()
             idleCooldownNag = true,
             idleCooldownThreshold = 5,
             idleCooldownSound = "alarm1",
+            idleNagPosition = nil,
             idleCooldownSoundCustomId = "",
             assistedCombat = false,
             timelineAutoShow = false,
