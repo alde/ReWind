@@ -67,6 +67,7 @@ function Display:OnDisable()
     if self.zenithFrame then self.zenithFrame:Hide() end
     if self.assistedFrame then self.assistedFrame:Hide() end
     self:HideZenithIcon()
+    self:HideZenithOverlay()
     self:HideIdleNag()
 end
 
@@ -444,6 +445,50 @@ end
 
 function Display:OnZenithCooldown()
     self:HideZenithIcon()
+    self:ShowZenithOverlay()
+end
+
+-- Zenith active screen overlay
+
+local ZENITH_OVERLAY_ID = 9999901
+local ZENITH_OVERLAY_TEXTURES = {
+    monk_tiger = 623952,
+    white_tiger = 603339,
+    dark_tiger = 603338,
+    generic_arc = 450917,
+    generic_top = 450923,
+}
+
+function Display:ShowZenithOverlay()
+    if not ReWind.db.profile.zenithOverlay then return end
+    if not SpellActivationOverlayFrame then return end
+
+    local texture = ZENITH_OVERLAY_TEXTURES[ReWind.db.profile.zenithOverlayStyle] or 623952
+    local r, g, b = ReWind:GetGlowColor()
+
+    SpellActivationOverlayFrame:ShowAllOverlays(
+        ZENITH_OVERLAY_ID, texture, 9, 1.0,
+        math.floor(r * 255), math.floor(g * 255), math.floor(b * 255)
+    )
+
+    if not self.zenithOverlayTimer then
+        self.zenithOverlayTimer = CreateFrame("Frame")
+    end
+    self.zenithOverlayExpires = GetTime() + ReWind.db.profile.zenithDuration
+    self.zenithOverlayTimer:SetScript("OnUpdate", function()
+        if GetTime() >= self.zenithOverlayExpires then
+            self:HideZenithOverlay()
+        end
+    end)
+end
+
+function Display:HideZenithOverlay()
+    if SpellActivationOverlayFrame then
+        SpellActivationOverlayFrame:HideOverlays(ZENITH_OVERLAY_ID)
+    end
+    if self.zenithOverlayTimer then
+        self.zenithOverlayTimer:SetScript("OnUpdate", nil)
+    end
 end
 
 -- Cooldown idle nag
