@@ -426,23 +426,26 @@ local function RebuildKeybindCache()
 
     for _, bar in ipairs(ACTION_BAR_BINDINGS) do
         for i = 1, 12 do
-            local key = GetBindingKey(bar.prefix .. i)
-            if key then
-                local slot = bar.offset + i
-                local actionType, id = GetActionInfo(slot)
-                if actionType == "spell" and id then
-                    CacheKey(id, key)
-                elseif actionType == "macro" then
-                    local macroSpell = GetMacroSpell(id)
-                    if macroSpell then CacheKey(macroSpell, key) end
-                end
+            local bindingName = bar.prefix .. i
+            local key1, key2 = GetBindingKey(bindingName)
+            local key = key1 or key2
+            local slot = bar.offset + i
+            local actionType, id = GetActionInfo(slot)
+            ReWind:Debug("Scan:", bindingName, "slot:", slot, "key:", key or "nil",
+                "type:", actionType or "nil", "id:", id or "nil")
+            if key and actionType == "spell" and id then
+                CacheKey(id, key)
+            elseif key and actionType == "macro" and id then
+                local macroSpell = GetMacroSpell(id)
+                if macroSpell then CacheKey(macroSpell, key) end
             end
         end
     end
 
+    ReWind:Debug("--- Keybind cache ---")
     for id, key in pairs(keybindCache) do
         local info = C_Spell.GetSpellInfo(id)
-        ReWind:Debug("Keybind:", id, info and info.name or "?", "->", key)
+        ReWind:Debug("  ", id, info and info.name or "?", "->", key)
     end
 end
 
